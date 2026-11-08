@@ -194,14 +194,14 @@
         // 1オクターブ上 (Drop2の10度やテンション)
         'R8': 12, '2_8': 14, '9_8': 14, 'b9_8': 13, '#9_8': 15,
         'm3_8': 15, 'M3_8': 16, '38': third + 12, '10': third + 12,
-        '4_8': 17, '58': (chord.isDim ? 6 : 7) + 12, '6_8': 21, '13_8': 21, '78': seventh + 12,
+        '4_8': 17, 'b5_8': 18, '58': (chord.isDim ? 6 : 7) + 12, '6_8': 21, '13_8': 21, '78': seventh + 12,
         'm7_8': 22,
         // 2オクターブ上
         'R15': 24, 'b9_15': 25, '2_15': 26, 'm3_15': 27, '3_15': third + 24,
         '4_15': 29, '5_15': (chord.isDim ? 6 : 7) + 24,
         // 1オクターブ下
         'R_down': -12, 'b9_down': -11, '2_down': -10, 'm3_down': -9, 'M3_down': -8,
-        '3_down': third - 12, '4_down': 5 - 12, '5_down': (chord.isDim ? 6 : 7) - 12, '6_down': -3, '7_down': seventh - 12,
+        '3_down': third - 12, '4_down': 5 - 12, 'b5_down': -6, '5_down': (chord.isDim ? 6 : 7) - 12, '6_down': -3, '7_down': seventh - 12,
         'm7_down': -2, 'M7_down': -1
       };
     };
@@ -310,7 +310,7 @@
         phrases.push({ cat: "Mechanical Min Down 8th", p: p8, d: steps8.map(o => minScale[s - o]), onlyMinor: true });
       }
 
-      // ドミナントV7：ディミニッシュ (3, 5, m7, b9)
+      // ドミナントV7：ディミニッシュ① (3, 5, m7, b9)
       const dimScale = ['3_down', '5_down', 'm7_down', 'b9', '3', '5', 'm7', 'b9_8', '38', '58', 'm7_8', 'b9_15', '3_15'];
       for (let s = 0; s < 4; s++) {
         phrases.push({ cat: "Mechanical V7 Dim Up", p: p16, d: steps16.map(o => dimScale[s + o]), onlyV7: true });
@@ -319,6 +319,17 @@
       for (let s = 6; s <= 9; s++) {
         phrases.push({ cat: "Mechanical V7 Dim Down", p: p16, d: steps16.map(o => dimScale[s - o]), onlyV7: true });
         phrases.push({ cat: "Mechanical V7 Dim Down 8th", p: p8, d: steps8.map(o => dimScale[s - o]), onlyV7: true });
+      }
+
+      // ドミナントV7：ディミニッシュ② (R, m3, b5, 6) - オルタード/コンディミ系テンション(#9, #11, 13)
+      const dimScale2 = ['m3_down', 'b5_down', '6_down', 'R', 'm3', 'b5', '6', 'R8', 'm3_8', 'b5_8', '6_8', 'R15', 'm3_15'];
+      for (let s = 0; s < 4; s++) {
+        phrases.push({ cat: "Mechanical V7 Dim2 Up", p: p16, d: steps16.map(o => dimScale2[s + o]), onlyV7: true });
+        phrases.push({ cat: "Mechanical V7 Dim2 Up 8th", p: p8, d: steps8.map(o => dimScale2[s + o]), onlyV7: true });
+      }
+      for (let s = 6; s <= 9; s++) {
+        phrases.push({ cat: "Mechanical V7 Dim2 Down", p: p16, d: steps16.map(o => dimScale2[s - o]), onlyV7: true });
+        phrases.push({ cat: "Mechanical V7 Dim2 Down 8th", p: p8, d: steps8.map(o => dimScale2[s - o]), onlyV7: true });
       }
 
       return phrases;
