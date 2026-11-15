@@ -93,6 +93,9 @@
     const topMidi = (m) => Array.isArray(m) ? Math.max(...m) : m;
     const SOLO_MIN_MIDI = 29; // アドリブ生成の下限 F1（E1=開放弦でしか弾けないため生成では使わない）
     const GIANT_WEIGHT = 0.8;   // Giant Steps 由来フレーズの選ばれやすさ
+    const BACH_WEIGHT = 1.0;    // Chromatic Fantasy 由来（マイナー用）フレーズの選ばれやすさ
+    const CORRENTE_WEIGHT = 1.0; // Bach Corrente 由来トライアドフレーズの選ばれやすさ
+    const PRELUDE_WEIGHT = 1.0;  // プレリュード BWV846 由来トライアドフレーズの選ばれやすさ
     const DONNA_WEIGHT = 1.5;   // Donna Lee 由来フレーズの選ばれやすさ（他フレーズ=1）
 
     const PITCH_CLASSES = {
@@ -1024,6 +1027,141 @@
       { cat: "Coltrane Giant Steps 228", p:["8","4.","4.","8"], d:["s16","s14","s12","s10"], q:["maj"], authentic:true, w:GIANT_WEIGHT }, // PDF bar 228 Ebmaj7
     ];
 
+    // バッハ「半音階的幻想曲」（ジャコ版）から拾ったマイナーコード用フレーズ。32分・6連符の原リズムを8分／16分に組み替え
+    // d はルートからの半音数。q:["min"] のマイナーコード小節でだけ使われる
+    const CHROMATIC_FANTASY_PHRASES = [
+      { cat: "Bach Chromatic Fantasy 8th 1", p:["8","8","8","8","8","8","8","8"], d:["s10","s8","s7","s6","s7","s10","s15","s13"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲10小節（Gm上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 2", p:["8","8","8","8","8","8","8","8"], d:["s19","s17","s15","s14","s12","s11","s12","s14"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲1小節（Dm上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 3", p:["8","8","8","8","8","8","8","8"], d:["s12","s14","s15","s17","s15","s14","s12","s11"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲2小節（Dm上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 4", p:["8","8","8","8","8","8","8","8"], d:["s0","s1","s3","s5","s7","s9","s10","s8"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲1小節（Em上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 5", p:["8","8","8","8","8","8","8","8"], d:["s7","s5","s3","s2","s0","s2","s3","s7"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲2小節（Dm上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 6", p:["8","8","8","8","8","8","8","8"], d:["s12","s14","s15","s20","s12","s5","s10","s12"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲5小節（Dm上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 7", p:["8","8","8","8","8","8","8","8"], d:["s19","s21","s12","s14","s15","s9","s10","s12"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲17小節（Dm上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 8", p:["8","8","8","8","8","8","8","8"], d:["s24","s20","s19","s17","s15","s14","s12","s11"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲18小節（Dm上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 9", p:["8","8","8","8","8","8","8","8"], d:["s12","s9","s12","s15","s19","s21","s15","s10"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲7小節（Cm上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 10", p:["8","8","8","8","8","8","8","8"], d:["s12","s8","s7","s12","s15","s12","s15","s19"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲11小節（Cm上の音形）
+      { cat: "Bach Chromatic Fantasy 8th 11", p:["8","8","8","8","8","8","8","8"], d:["s0","s3","s7","s3","s7","s12","s7","s12"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲12小節（Cm上の音形）
+      { cat: "Bach Chromatic Fantasy 16th 1", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s3","s5","s7","s0","s3","s6","s7","s11","s12","s3","s7","s11","s12","s14","s15","s8"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲16小節（Dm上の音形）
+      { cat: "Bach Chromatic Fantasy 16th 2", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s12","s14","s15","s17","s19","s21","s23","s24","s22","s20","s19","s17","s15","s14","s12","s11"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲1小節（Dm上の音形）
+      { cat: "Bach Chromatic Fantasy 16th 3", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s19","s16","s15","s13","s12","s15","s20","s15","s12","s15","s12","s8","s12","s8","s3","s8"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲19小節（C#m上の音形）
+      { cat: "Bach Chromatic Fantasy 16th 4", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s10","s12","s14","s19","s10","s3","s8","s11","s12","s17","s8","s2","s7","s9","s11","s15"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲5小節（Dm上の音形）
+      { cat: "Bach Chromatic Fantasy 16th 5", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s12","s3","s5","s6","s0","s2","s3","s9","s10","s12","s14","s15","s14","s17","s15","s14"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲17小節（Bm上の音形）
+      { cat: "Bach Chromatic Fantasy 16th 6", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s3","s2","s5","s10","s7","s5","s1","s0","s5","s8","s5","s8","s12","s8","s12","s17"], q:["min"], authentic:true, w:BACH_WEIGHT }, // 原曲11小節（Gm上の音形）
+    ];
+
+    // Chromatic Fantasy から拾ったii-V（m7→7）用フレーズ。前半2拍はm7のルート基準、後半2拍は7のルート基準
+    const CHROMATIC_FANTASY_IIV_PHRASES = [
+      { cat: "Bach Chromatic Fantasy iiV 8th 1", p:["8","8","8","8","8","8","8","8"], d:["s15","s13","s12","s10","s4","s5","s7","s8"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲1小節（Em7→A7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 2", p:["8","8","8","8","8","8","8","8"], d:["s15","s13","s12","s10","s7","s8","s12","s16"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲2小節（Em7→A7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 3", p:["8","8","8","8","8","8","8","8"], d:["s12","s17","s15","s12","s4","s1","s4","s7"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲7小節（Fm7→Bb7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 4", p:["8","8","8","8","8","8","8","8"], d:["s12","s17","s15","s14","s7","s1","s7","s16"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲8小節（Dm7→G7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 5", p:["8","8","8","8","8","8","8","8"], d:["s27","s21","s22","s26","s12","s13","s10","s4"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲8小節（Bm7→E7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 6", p:["8","8","8","8","8","8","8","8"], d:["s27","s20","s19","s22","s10","s8","s4","s1"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲9小節（Bm7→E7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 7", p:["8","8","8","8","8","8","8","8"], d:["s7","s10","s15","s12","s4","s1","s0","s3"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲11小節（F#m7→B7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 8", p:["8","8","8","8","8","8","8","8"], d:["s15","s13","s12","s10","s4","s13","s12","s10"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲19小節（Em7→A7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 9", p:["8","8","8","8","8","8","8","8"], d:["s15","s14","s12","s10","s4","s13","s10","s9"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲19小節（Dm7→G7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 10", p:["8","8","8","8","8","8","8","8"], d:["s10","s9","s7","s6","s4","s9","s4","s1"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲19小節（Gm7→C7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 8th 11", p:["8","8","8","8","8","8","8","8"], d:["s7","s9","s10","s12","s28","s29","s31","s22"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲16小節（Bm7→E7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 16th 1", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s22","s24","s22","s21","s19","s18","s15","s14","s7","s5","s4","s2","s4","s5","s9","s13"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲2小節（Gm7→C7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 16th 2", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s19","s21","s22","s27","s19","s12","s17","s19","s16","s21","s12","s5","s10","s13","s14","s19"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲5小節（Gm7→C7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 16th 3", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s19","s20","s17","s11","s12","s15","s20","s18","s10","s7","s4","s7","s10","s13","s16","s7"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲8小節（Am7→D7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 16th 4", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s24","s26","s27","s21","s22","s24","s18","s20","s16","s7","s9","s10","s4","s6","s7","s13"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲17小節（Dm7→G7上の音形）
+      { cat: "Bach Chromatic Fantasy iiV 16th 5", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s3","s5","s7","s0","s3","s6","s7","s11","s19","s10","s14","s18","s19","s21","s22","s15"], q:["min"], q2:["dom"], authentic:true, w:BACH_WEIGHT }, // 原曲16小節（Dm7→G7上の音形）
+    ];
+
+    // Bach: Partita No.1 BWV1002 Corrente 由来のトライアド（＋7th）アルペジオ。
+    // 原曲は3/4拍子の8分音符6つ＝1小節。4/4用に、8分版は「6音＋4分の着地音」、16分版は「6音＋頂点→折り返して戻る」形に組み直し。
+    const BACH_CORRENTE_PHRASES = [
+      { cat: "Triad Corrente 8th 1", p:["8","8","8","8","8","8","4"], d:["s12","s0","s3","s7","s12","s15","s19"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲1小節（Bm上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 2", p:["8","8","8","8","8","8","4"], d:["s0","s3","s7","s12","s15","s19","s15"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲3小節（Bm上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 3", p:["8","8","8","8","8","8","4"], d:["s19","s12","s4","s10","s9","s7","s4"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲4小節（A7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 4", p:["8","8","8","8","8","8","4"], d:["s0","s4","s7","s12","s16","s19","s16"], q:["maj","dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲5小節（D上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 5", p:["8","8","8","8","8","8","4"], d:["s15","s7","s0","s3","s7","s10","s12"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲12小節（Em上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 6", p:["8","8","8","8","8","8","4"], d:["s16","s7","s0","s4","s7","s10","s12"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲13小節（A7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 7", p:["8","8","8","8","8","8","4"], d:["s4","s12","s19","s14","s12","s10","s7"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲14小節（D7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 8", p:["8","8","8","8","8","8","4"], d:["s4","s0","s4","s7","s12","s16","s19"], q:["maj","dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲15小節（G上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 9", p:["8","8","8","8","8","8","4"], d:["s28","s19","s10","s19","s24","s28","s24"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲16小節（A7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 10", p:["8","8","8","8","8","8","4"], d:["s24","s19","s16","s12","s7","s23","s24"], q:["maj"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲17小節（D上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 11", p:["8","8","8","8","8","8","4"], d:["s3","s7","s12","s15","s19","s10","s7"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲22小節（F#m上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 12", p:["8","8","8","8","8","8","4"], d:["s16","s19","s22","s26","s24","s10","s7"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲23小節（B7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 13", p:["8","8","8","8","8","8","4"], d:["s4","s7","s12","s16","s19","s22","s19"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲25小節（C#7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 14", p:["8","8","8","8","8","8","4"], d:["s15","s7","s0","s7","s12","s15","s19"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲67小節（Bm上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 15", p:["8","8","8","8","8","8","4"], d:["s3","s0","s3","s7","s12","s15","s19"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲69小節（Em上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 16", p:["8","8","8","8","8","8","4"], d:["s3","s0","s3","s7","s8","s12","s15"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲77小節（Am上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 17", p:["8","8","8","8","8","8","4"], d:["s24","s19","s16","s19","s16","s12","s7"], q:["maj","dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲82小節（A上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 18", p:["8","8","8","8","8","8","4"], d:["s16","s19","s16","s12","s7","s10","s12"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲84小節（A7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 19", p:["8","8","8","8","8","8","4"], d:["s19","s12","s4","s14","s12","s10","s7"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲86小節（A7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 20", p:["8","8","8","8","8","8","4"], d:["s4","s7","s10","s14","s12","s10","s7"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲88小節（A7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 8th 21", p:["8","8","8","8","8","8","4"], d:["s10","s4","s5","s7","s0","s4","s7"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲110小節（F#7上のアルペジオ）＋着地音
+      { cat: "Triad Corrente 16th 1", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s12","s0","s3","s7","s12","s15","s19","s15","s12","s7","s3","s0","s12"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲1小節（Bm上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 2", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s0","s3","s7","s12","s15","s19","s15","s19","s15","s12","s7","s3","s0"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲3小節（Bm上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 3", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s19","s12","s4","s10","s9","s7","s4","s7","s9","s10","s4","s12","s19"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲4小節（A7上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 4", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s0","s4","s7","s12","s16","s19","s16","s19","s16","s12","s7","s4","s0"], q:["maj","dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲5小節（D上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 5", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s15","s7","s0","s3","s7","s10","s12","s10","s7","s3","s0","s7","s15"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲12小節（Em上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 6", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s16","s7","s0","s4","s7","s10","s12","s10","s7","s4","s0","s7","s16"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲13小節（A7上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 7", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s4","s12","s19","s14","s12","s10","s7","s10","s12","s14","s19","s12","s4"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲14小節（D7上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 8", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s4","s0","s4","s7","s12","s16","s19","s16","s12","s7","s4","s0","s4"], q:["maj","dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲15小節（G上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 9", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s28","s19","s10","s19","s24","s28","s24","s28","s24","s19","s10","s19","s28"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲16小節（A7上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 10", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s24","s19","s16","s12","s7","s23","s24","s23","s7","s12","s16","s19","s24"], q:["maj"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲17小節（D上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 11", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s3","s7","s12","s15","s19","s10","s7","s10","s19","s15","s12","s7","s3"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲22小節（F#m上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 12", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s16","s19","s22","s26","s24","s10","s7","s10","s24","s26","s22","s19","s16"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲23小節（B7上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 13", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s4","s7","s12","s16","s19","s22","s19","s22","s19","s16","s12","s7","s4"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲25小節（C#7上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 14", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s15","s7","s0","s7","s12","s15","s19","s15","s12","s7","s0","s7","s15"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲67小節（Bm上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 15", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s3","s0","s3","s7","s12","s15","s19","s15","s12","s7","s3","s0","s3"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲69小節（Em上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 16", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s3","s0","s3","s7","s8","s12","s15","s12","s8","s7","s3","s0","s3"], q:["min"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲77小節（Am上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 17", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s24","s19","s16","s19","s16","s12","s7","s12","s16","s19","s16","s19","s24"], q:["maj","dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲82小節（A上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 18", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s16","s19","s16","s12","s7","s10","s12","s10","s7","s12","s16","s19","s16"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲84小節（A7上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 19", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s19","s12","s4","s14","s12","s10","s7","s10","s12","s14","s4","s12","s19"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲86小節（A7上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 20", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s4","s7","s10","s14","s12","s10","s7","s10","s12","s14","s10","s7","s4"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲88小節（A7上のアルペジオ）＋折り返し
+      { cat: "Triad Corrente 16th 21", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s10","s4","s5","s7","s0","s4","s7","s4","s0","s7","s5","s4","s10"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲110小節（F#7上のアルペジオ）＋折り返し
+    ];
+
+    // 2小節にまたがる ii-V（m7 1小節 → 4度上の7th 1小節）フレーズ。d2 は後半小節の音（基準は ii のルート）
+    const IIV_2BAR_PHRASES = [
+      { cat: "Parker Donna Lee iiV 2bar 1", p:["8","8","8","8","8","8","8","8"], d:["s17","s11","s12","s15","s19","s22","s26","s29"], p2:["8","8","8","8","8","8","8","8"], d2:["s27","s19","s22","s26","s25","s18","s17","s15"], q:["min"], span2:true, authentic:true, w:DONNA_WEIGHT }, // 原曲5-6小節（Bbm7→Eb7）
+      { cat: "Parker Donna Lee iiV 2bar 2", p:["8","8","8","8","8","8","8","8"], d:["s17","s15","s7","s10","s14","s12","s7","s11"], p2:["8","8","8","8","trip8","trip8","trip8","8","8"], d2:["s9","s12","s15","s12","s18","s20","s18","s17","s15"], q:["min"], span2:true, authentic:true, w:DONNA_WEIGHT }, // 原曲15-16小節（Bbm7→Eb7）
+      { cat: "Parker Donna Lee iiV 2bar 3", p:["z8","16","16","trip8","trip8","trip8","8","8","8","8"], d:["s0","s3","s7","s10","s14","s17","s16","s15","s14"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s11","s10","s9","s8","s7","s6","s4"], q:["min"], span2:true, authentic:true, w:DONNA_WEIGHT }, // 原曲37-38小節（Bbm7→Eb7）
+      { cat: "Parker Donna Lee iiV 2bar 4", p:["z2","z8","16","16","8","8"], d:["s0","s3","s7","s10"], p2:["8","8","8","8","8","8","4"], d2:["s9","s7","s5","s0","s8","s7","s5"], q:["min"], span2:true, authentic:true, w:DONNA_WEIGHT }, // 原曲47-48小節（Bbm7→Eb7）
+      { cat: "Parker Donna Lee iiV 2bar 5", p:["4","z4","z8","8","8","8"], d:["s10","s0","s2","s3"], p2:["4","z4","8","8","8","8"], d2:["s3","s8","s7","s6","s4"], q:["min"], span2:true, authentic:true, w:DONNA_WEIGHT }, // 原曲79-80小節（Bbm7→Eb7）
+      { cat: "Bach Chromatic Fantasy iiV 2bar 1", p:["8","8","8","8","8","8","8","8"], d:["s22","s24","s22","s21","s19","s18","s15","s14"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s10","s9","s7","s9","s10","s14","s18"], q:["min"], span2:true, authentic:true, w:BACH_WEIGHT }, // 原曲2小節〜（Gm7→C7上の音形、8分に組み替え）
+      { cat: "Bach Chromatic Fantasy iiV 2bar 2", p:["8","8","8","8","8","8","8","8"], d:["s19","s21","s22","s27","s19","s12","s17","s19"], p2:["8","8","8","8","8","8","8","8"], d2:["s21","s26","s17","s10","s15","s18","s19","s24"], q:["min"], span2:true, authentic:true, w:BACH_WEIGHT }, // 原曲5小節〜（Gm7→C7上の音形、8分に組み替え）
+      { cat: "Bach Chromatic Fantasy iiV 2bar 3", p:["8","8","8","8","8","8","8","8"], d:["s3","s5","s7","s0","s3","s6","s7","s11"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s3","s7","s11","s12","s14","s15","s8"], q:["min"], span2:true, authentic:true, w:BACH_WEIGHT }, // 原曲16小節〜（Dm7→G7上の音形、8分に組み替え）
+      { cat: "Bach Chromatic Fantasy iiV 2bar 4", p:["8","8","8","8","8","8","8","8"], d:["s22","s22","s24","s26","s22","s21","s19","s18"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s14","s12","s10","s9","s7","s6","s3"], q:["min"], span2:true, authentic:true, w:BACH_WEIGHT }, // 原曲14小節〜（Gm7→C7上の音形、8分に組み替え）
+      { cat: "Bach Chromatic Fantasy iiV 2bar 5", p:["8","8","8","8","8","8","8","8"], d:["s3","s9","s10","s12","s14","s15","s14","s17"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s14","s12","s10","s8","s6","s5","s3"], q:["min"], span2:true, authentic:true, w:BACH_WEIGHT }, // 原曲17小節〜（Bm7→E7上の音形、8分に組み替え）
+    ];
+
+    // Bach: 平均律第1巻 プレリュード ハ長調 BWV846 由来のトライアド／7thアルペジオ（各小節の分散和音そのもの）
+    const PRELUDE_PHRASES = [
+      { cat: "Triad Prelude BWV846 8th 1", p:["8","8","8","8","8","8","8","8"], d:["s0","s4","s7","s12","s16","s7","s12","s16"], q:["maj","dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲1小節（C・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 2", p:["8","8","8","8","8","8","8","8"], d:["s10","s12","s19","s24","s27","s19","s24","s27"], q:["min"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲2小節（Dm7・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 3", p:["8","8","8","8","8","8","8","8"], d:["s4","s7","s12","s19","s22","s12","s19","s22"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲3小節（G7・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 4", p:["8","8","8","8","8","8","8","8"], d:["s3","s7","s12","s19","s24","s12","s19","s24"], q:["min"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲5小節（Am・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 5", p:["8","8","8","8","8","8","8","8"], d:["s10","s12","s16","s19","s24","s16","s19","s24"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲6小節（D7・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 6", p:["8","8","8","8","8","8","8","8"], d:["s4","s7","s12","s19","s24","s12","s19","s24"], q:["maj","dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲7小節（G・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 7", p:["8","8","8","8","8","8","8","8"], d:["s11","s12","s16","s19","s24","s16","s19","s24"], q:["maj"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲8小節（Cmaj7・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 8", p:["8","8","8","8","8","8","8","8"], d:["s0","s3","s7","s10","s15","s7","s10","s15"], q:["min"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲9小節（Am7・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 9", p:["8","8","8","8","8","8","8","8"], d:["s0","s7","s12","s16","s22","s12","s16","s22"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲10小節（D7・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 10", p:["8","8","8","8","8","8","8","8"], d:["s0","s7","s10","s12","s16","s10","s12","s16"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲20小節（C7・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 11", p:["8","8","8","8","8","8","8","8"], d:["s0","s12","s16","s19","s23","s16","s19","s23"], q:["maj"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲21小節（Fmaj7・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 12", p:["8","8","8","8","8","8","8","8"], d:["s0","s10","s12","s16","s19","s12","s16","s19"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲24小節（G7・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 13", p:["8","8","8","8","8","8","8","8"], d:["s7","s16","s19","s24","s28","s19","s24","s28"], q:["maj","dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲25小節（C・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 8th 14", p:["8","8","8","8","8","8","8","8"], d:["s7","s16","s19","s24","s31","s19","s24","s31"], q:["maj","dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲29小節（C・前半8音を8分に）
+      { cat: "Triad Prelude BWV846 16th 1", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s0","s4","s7","s12","s16","s7","s12","s16","s0","s4","s7","s12","s16","s7","s12","s16"], q:["maj","dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲1小節（C・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 2", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s10","s12","s19","s24","s27","s19","s24","s27","s10","s12","s19","s24","s27","s19","s24","s27"], q:["min"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲2小節（Dm7・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 3", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s4","s7","s12","s19","s22","s12","s19","s22","s4","s7","s12","s19","s22","s12","s19","s22"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲3小節（G7・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 4", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s3","s7","s12","s19","s24","s12","s19","s24","s3","s7","s12","s19","s24","s12","s19","s24"], q:["min"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲5小節（Am・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 5", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s10","s12","s16","s19","s24","s16","s19","s24","s10","s12","s16","s19","s24","s16","s19","s24"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲6小節（D7・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 6", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s4","s7","s12","s19","s24","s12","s19","s24","s4","s7","s12","s19","s24","s12","s19","s24"], q:["maj","dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲7小節（G・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 7", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s11","s12","s16","s19","s24","s16","s19","s24","s11","s12","s16","s19","s24","s16","s19","s24"], q:["maj"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲8小節（Cmaj7・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 8", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s0","s3","s7","s10","s15","s7","s10","s15","s0","s3","s7","s10","s15","s7","s10","s15"], q:["min"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲9小節（Am7・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 9", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s0","s7","s12","s16","s22","s12","s16","s22","s0","s7","s12","s16","s22","s12","s16","s22"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲10小節（D7・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 10", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s0","s7","s10","s12","s16","s10","s12","s16","s0","s7","s10","s12","s16","s10","s12","s16"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲20小節（C7・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 11", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s0","s12","s16","s19","s23","s16","s19","s23","s0","s12","s16","s19","s23","s16","s19","s23"], q:["maj"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲21小節（Fmaj7・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 12", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s0","s10","s12","s16","s19","s12","s16","s19","s0","s10","s12","s16","s19","s12","s16","s19"], q:["dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲24小節（G7・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 13", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s7","s16","s19","s24","s28","s19","s24","s28","s7","s16","s19","s24","s28","s19","s24","s28"], q:["maj","dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲25小節（C・原曲どおり16分×2回）
+      { cat: "Triad Prelude BWV846 16th 14", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s7","s16","s19","s24","s31","s19","s24","s31","s7","s16","s19","s24","s31","s19","s24","s31"], q:["maj","dom"], authentic:true, w:PRELUDE_WEIGHT }, // 原曲29小節（C・原曲どおり16分×2回）
+    ];
+
     // フレーズ辞書（トライアド、展開形、Drop2、3度代理、ディミニッシュ、パーカー、ペンタトニック、ハーモニクス、Donna Lee抽出）
     const PHRASE_DICTIONARY = [
       // 1. トライアド＆展開形 (4拍目を8分で動かす)
@@ -1088,11 +1226,19 @@
       // 9. チャーリー・パーカー「Donna Lee」実譜面から抽出したビバップ・フレーズ
       ...DONNA_LEE_PHRASES,
       // 10. コルトレーン「Giant Steps」実譜面から抽出したフレーズ
-      ...GIANT_STEPS_PHRASES
+      ...GIANT_STEPS_PHRASES,
+      // 11. バッハ「半音階的幻想曲」（ジャコ版）から組み替えたマイナー用フレーズ
+      ...CHROMATIC_FANTASY_PHRASES,
+      ...CHROMATIC_FANTASY_IIV_PHRASES,
+      ...BACH_CORRENTE_PHRASES,
+      // 12. バッハ「平均律 プレリュード BWV846」のアルペジオ
+      ...PRELUDE_PHRASES,
+      // 13. 2小節にまたがる ii-V（Donna Lee／Chromatic Fantasy）
+      ...IIV_2BAR_PHRASES
     ];
 
     // 16分系（16分・3連16分）を含むフレーズか
-    const hasSixteenth = (cell) => cell.p.includes("16") || cell.p.includes("trip16");
+    const hasSixteenth = (cell) => [...cell.p, ...(cell.p2 || [])].some(x => x === "16" || x === "trip16");
 
     // 音価の解決（完コピ譜面・アドリブ生成の両方で共通利用）
     const resolveDuration = (durType, tripCounter) => {
@@ -1513,6 +1659,7 @@
         let prevLastMidi = null;   // 直前の音程（コードチェンジ時の跳躍を最小化するために追跡）
         let prevLastFret = null;   // 直前のフレット番号（コード境目のポジション移動を最小化）
         let prevTabState = null;   // 直前の音の運指状態（弦・フレット・ボックス）。小節をまたいだボックス連結に使う
+        let pendingSpan = null;    // 2小節フレーズ（ii-V）の後半小節。次の小節で強制的に使う
 
         const perLine = currentSong.measuresPerLine || 4;   // 1段あたりの小節数（曲ごとに変更可）
         const numSystems = Math.ceil(measureCount / perLine);
@@ -1639,7 +1786,20 @@
                 }
               });
             } else {
-              let pool = PHRASE_DICTIONARY.filter(cell => {
+              // 2小節フレーズの後半を予約済みなら、その小節の候補探索は不要
+              const spanNow = pendingSpan;
+              let pool = spanNow ? [spanNow.cell] : PHRASE_DICTIONARY.filter(cell => {
+                // 2小節ii-Vフレーズ：この小節が m7（1コード）で、次の小節が完全4度上の7th（1コード）のときだけ
+                if (cell.span2) {
+                  if (c2Str || globalMeasureIdx + 1 >= measureCount) return false;
+                  const nxRaw = chords[globalMeasureIdx + 1];
+                  if (!nxRaw) return false;
+                  const nxParts = nxRaw.split(/\s+/).filter(Boolean);
+                  if (nxParts.length !== 1) return false;
+                  const nx = parseChord(nxParts[0]);
+                  if (chordQuality(chord1.name) !== 'min' || chordQuality(nx.name) !== 'dom') return false;
+                  if ((nx.rootPc - chord1.rootPc + 12) % 12 !== 5) return false;
+                }
                 // 16分音符の許可判定
                 if (!allow16th && hasSixteenth(cell)) return false;
                 // 16分許可時はMechanicalの8分版を除外（高速フレーズを優先）
@@ -1656,7 +1816,7 @@
 
                 if (category !== "ALL") {
                   if (category === "TRIAD" && !cell.cat.includes("Triad") && !cell.cat.includes("Drop")) return false;
-                  if (category === "BEBOP" && !cell.cat.includes("Parker") && !cell.cat.includes("Coltrane") && !cell.cat.includes("V7")) return false;
+                  if (category === "BEBOP" && !cell.cat.includes("Parker") && !cell.cat.includes("Coltrane") && !cell.cat.includes("Bach") && !cell.cat.includes("V7")) return false;
                   if (category === "PENTA" && !cell.cat.includes("Mechanical")) return false;
                 }
                 // Donna Lee由来フレーズは、元のコード種別（ii-Vは2コード）に合う小節にだけ使う
@@ -1673,7 +1833,7 @@
               });
 
               if (pool.length === 0) {
-                pool = PHRASE_DICTIONARY.filter(c => (!allow16th ? !hasSixteenth(c) : true) && !c.onlyV7 && !c.onlyMajor && !c.onlyMinor && !c.q);
+                pool = PHRASE_DICTIONARY.filter(c => (!allow16th ? !hasSixteenth(c) : true) && !c.onlyV7 && !c.onlyMajor && !c.onlyMinor && !c.q && !c.span2);
               }
               if (pool.length === 0) {
                 // 万が一条件が厳しすぎて見つからない場合の最終フォールバック
@@ -1686,7 +1846,7 @@
               let candidates = [];
 
               pool.forEach(candCell => {
-                const offs = candCell.d.map(deg => (degrees1[deg] !== undefined ? degrees1[deg] : 0));
+                const offs = [...candCell.d, ...(candCell.d2 || [])].map(deg => (degrees1[deg] !== undefined ? degrees1[deg] : 0));
                 const minOff = Math.min(...offs);
                 const maxOff = Math.max(...offs);
                 const firstOff = offs[0];
@@ -1764,6 +1924,15 @@
                   cell = chosen.cell;
                   actualRoot1 = chosen.root1;
                 }
+              }
+
+              // 2小節フレーズ：後半小節は前の小節と同じ基準ルート（ii のルート）で、続きの音をそのまま置く
+              if (spanNow) {
+                cell = spanNow.cell;
+                actualRoot1 = spanNow.root;
+                pendingSpan = null;
+              } else if (cell.span2) {
+                pendingSpan = { cell: { cat: cell.cat + " (2/2)", p: cell.p2, d: cell.d2, authentic: true, spanTail: true }, root: actualRoot1 };
               }
 
               // 1小節内に2つ目のコードがある場合、前半の最後の音から同音を避けて半音・全音で繋がるオクターブを選択
