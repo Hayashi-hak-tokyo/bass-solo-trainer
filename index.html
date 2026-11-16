@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -588,6 +588,84 @@ const AUTUMN_LEAVES_MELODY = [
       [["z4"], ["4", 67], ["4", 69], ["4", 70]]           // 32 Gm7（ピックアップ：ループで1小節目へ）
     ];
 
+    // ブルー・ボッサのテーマ（いただいたリードシートから。ピックアップのGは曲頭から外し、ループでつながるよう最後の小節に入れる）
+    // [音価, 実音MIDI, "-"=次へタイ]、休符は [音価]。13〜14小節目は2声で書かれているので、上の声（メロディ）だけ
+    const BLUE_BOSSA_MELODY = [
+      [["4.", 79], ["8", 77], ["8", 75], ["4", 74], ["8", 72, "-"]],               // 1  Cm（G F Eb D C~）
+      [["2.", 72], ["4", 70]],                                                    // 2  Cm（C Bb）
+      [["2", 68], ["4.", 79], ["8", 77, "-"]],                                    // 3  Fm7（Ab G F~）
+      [["1", 77]],                                                                // 4  Fm7（F）
+      [["4.", 77], ["8", 75], ["8", 74], ["4", 72], ["8", 70, "-"]],              // 5  Dm7b5（F Eb D C Bb~）
+      [["2.", 70], ["4", 68]],                                                    // 6  G7（Bb Ab）
+      [["2", 67], ["4.", 77], ["8", 75, "-"]],                                    // 7  Cm（G F Eb~）
+      [["1", 75]],                                                                // 8  Cm（Eb）
+      [["4.", 75], ["8", 73], ["8", 72], ["4", 70], ["8", 68, "-"]],              // 9  Ebm7（Eb Db C Bb Ab~）
+      [["2.", 68], ["4", 66]],                                                    // 10 Ab7（Ab Gb）
+      [["4", 66], ["8", 65], ["8", 70, "-"], ["8", 70], ["8", 65], ["4", 68, "-"]], // 11 Dbmaj7（Gb F Bb~Bb F Ab~）
+      [["1", 68]],                                                                // 12 Dbmaj7（Ab）
+      [["4", 68], ["8", 67], ["8", 70, "-"], ["4.", 70], ["8", 68]],              // 13 Dm7b5（Ab G Bb~Bb Ab）
+      [["4", 68], ["8", 67], ["8", 70, "-"], ["4.", 70], ["8", 68]],              // 14 G7（Ab G Bb~Bb Ab）
+      [["1", 67, "-"]],                                                           // 15 Cm（G~）
+      [["2.", 67], ["4", 67]]                                                     // 16 Cm（G、最後の4分はピックアップ：ループで1小節目へ）
+    ];
+
+    // セント・トーマスのテーマ（いただいたリードシートから）。[音価, 実音MIDI, "-"=次へタイ]、休符は [音価]
+    const ST_THOMAS_MELODY = [
+      [["z8"], ["4", 67], ["8", 72, "-"], ["8", 72], ["4", 71], ["8", 69]],      // 1  Cmaj7（G C~C B A）
+      [["4", 67], ["4", 69], ["4", 64], ["4", 65]],                               // 2  Em7 A7（G A E F）
+      [["4", 67], ["4", 72], ["4", 71], ["4", 72, "-"]],                          // 3  Dm7 G7（G C B C~）
+      [["4", 72], ["z4"], ["z2"]],                                                // 4  Cmaj7（C）
+      [["z8"], ["4", 67], ["8", 72, "-"], ["8", 72], ["4", 71], ["8", 69]],      // 5  Cmaj7
+      [["4", 67], ["4", 69], ["4", 64], ["4", 65]],                               // 6  Em7 A7
+      [["4", 67], ["4", 72], ["4", 71], ["4", 72, "-"]],                          // 7  Dm7 G7
+      [["4", 72], ["z4"], ["z2"]],                                                // 8  Cmaj7
+      [["4.", 76], ["8", 77, "-"], ["4.", 77], ["8", 79, "-"]],                   // 9  Em7b5（E F~F G~）
+      [["4", 79], ["z4"], ["z2"]],                                                // 10 A7（G）
+      [["4.", 77], ["8", 76, "-"], ["4.", 76], ["8", 74, "-"]],                   // 11 Dm7（F E~E D~）
+      [["4", 74], ["z4"], ["z2"]],                                                // 12 G7（D）
+      [["z8"], ["4", 76], ["z8"], ["2", 74]],                                     // 13 Cmaj7 C7（E D）
+      [["4.", 72], ["8", 69, "-"], ["2", 69]],                                    // 14 Fmaj7 F#dim7（C A~A）
+      [["4", 67], ["4", 72], ["4", 71], ["4", 72, "-"]],                          // 15 Cmaj7/G G7（G C B C~）
+      [["4", 72], ["z4"], ["z2"]]                                                 // 16 Cmaj7（C）
+    ];
+
+    // 酒とバラの日々のテーマ（いただいたリードシートから）。1番カッコ・2番カッコを展開して32小節にしてある
+    // 曲頭のピックアップ（C）は、ループでつながるよう最後の小節に入れる。[音価, 実音MIDI, "-"=次へタイ]、休符は [音価]
+    const DAYS_OF_WINE_MELODY = [
+      [["1", 69]], // 1  Fmaj7（A）
+      [["z4"], ["4", 67], ["4", 69], ["4", 72]], // 2  Eb7（G A C）
+      [["2", 74], ["2", 72, "-"]], // 3  D7（D C~）
+      [["2", 72], ["4", 72], ["4", 69]], // 4  D7（C C A）
+      [["4", 69], ["4", 62], ["2", 62, "-"]], // 5  Gm7（A D D~）
+      [["2", 62], ["4", 72], ["4", 69]], // 6  Gm7（D C A）
+      [["4", 69], ["4", 61], ["2", 61, "-"]], // 7  Bbm7（A Db Db~）
+      [["2", 61], ["4", 69], ["4", 67]], // 8  Eb7（Db A G）
+      [["4", 67], ["4", 60], ["4.", 62], ["8", 64]], // 9  Am7（G C D. E）
+      [["4", 67], ["4", 65], ["4", 69], ["4", 74]], // 10 Dm7（G F A D）
+      [["2.", 72], ["4", 70]], // 11 Gm7（C Bb）
+      [["4", 72], ["4", 70], ["4", 69], ["4", 67]], // 12 Em7b5 A7（C Bb A G）
+      [["2.", 69], ["4", 64]], // 13 Dm7（A E）
+      [["4", 67], ["4", 65], ["4.", 64], ["8", 62]], // 14 G7（G F E. D）
+      [["1", 67, "-"]], // 15 Gm7/C（G~）
+      [["2.", 67], ["4", 60]], // 16 C7（G C＝ピックアップ）
+      [["1", 69]], // 17 Fmaj7（A）
+      [["z4"], ["4", 67], ["4", 69], ["4", 72]], // 18 Eb7（G A C）
+      [["2", 74], ["2", 72, "-"]], // 19 D7（D C~）
+      [["2", 72], ["4", 72], ["4", 69]], // 20 D7（C C A）
+      [["4", 69], ["4", 62], ["2", 62, "-"]], // 21 Gm7（A D D~）
+      [["2", 62], ["4", 72], ["4", 69]], // 22 Gm7（D C A）
+      [["4", 69], ["4", 61], ["2", 61, "-"]], // 23 Bbm7（A Db Db~）
+      [["2", 61], ["4", 69], ["4", 67]], // 24 Eb7（Db A G）
+      [["4", 67], ["4", 60], ["4", 62], ["4", 64]], // 25 Am7（G C D E）
+      [["4", 65], ["4", 67], ["4", 69], ["4", 72]], // 26 Dm7 Dm7/C（F G A C）
+      [["1", 76, "-"]], // 27 Bm7b5（E~）
+      [["2.", 76], ["4", 74]], // 28 Bb7（E D）
+      [["4", 72], ["4", 69], ["4", 67], ["4", 65]], // 29 Am7 Dm7（C A G F）
+      [["4", 69], ["2", 69], ["4", 62]], // 30 Gm7 C7（A A D）
+      [["1", 65, "-"]], // 31 F6（F~）
+      [["2.", 65], ["4", 60]]  // 32 F6（F、最後の4分のCはピックアップ：ループで1小節目へ）
+    ];
+
     const STANDARD_SONGS = [
       {
         title: "1-6-2-5 (Turnaround in C)", key: "C", measures: 8,
@@ -639,11 +717,12 @@ const AUTUMN_LEAVES_MELODY = [
       },
       {
         title: "Days of Wine and Roses", key: "F", measures: 32,
+        melodyBars: DAYS_OF_WINE_MELODY,            // テーマのメロディ（コードメロディのモードで使う）
         chords: [
           "Fmaj7", "Eb7", "D7", "D7", "Gm7", "Gm7", "Bbm7", "Eb7",
-          "Fmaj7", "Am7 D7", "Gm7", "Gm7", "G7", "G7", "Gm7", "C7",
+          "Am7", "Dm7", "Gm7", "Em7b5 A7", "Dm7", "G7", "Gm7", "C7",
           "Fmaj7", "Eb7", "D7", "D7", "Gm7", "Gm7", "Bbm7", "Eb7",
-          "Fmaj7", "Am7 D7", "Gm7", "C7", "Fmaj7", "Gm7 C7", "Fmaj7", "Fmaj7"
+          "Am7", "Dm7", "Bm7b5", "Bb7", "Am7 Dm7", "Gm7 C7", "Fmaj7", "Fmaj7"
         ]
       },
       {
@@ -657,6 +736,7 @@ const AUTUMN_LEAVES_MELODY = [
       },
       {
         title: "Blue Bossa", key: "Cm", measures: 16,
+        melodyBars: BLUE_BOSSA_MELODY,              // テーマのメロディ（コードメロディのモードで使う）
         chords: [
           "Cm7", "Cm7", "Fm7", "Fm7", "Dm7b5", "G7", "Cm7", "Cm7",
           "Ebm7", "Ab7", "Dbmaj7", "Dbmaj7", "Dm7b5", "G7", "Cm7", "Dm7b5 G7"
@@ -664,8 +744,9 @@ const AUTUMN_LEAVES_MELODY = [
       },
       {
         title: "St. Thomas", key: "C", measures: 16,
+        melodyBars: ST_THOMAS_MELODY,               // テーマのメロディ（コードメロディのモードで使う）
         chords: [
-          "Cmaj7", "Em7b5 A7", "Dm7", "G7", "Cmaj7", "Em7b5 A7", "Dm7", "G7",
+          "Cmaj7", "Em7 A7", "Dm7 G7", "Cmaj7", "Cmaj7", "Em7 A7", "Dm7 G7", "Cmaj7",
           "Em7b5", "A7", "Dm7", "G7", "Cmaj7 C7", "Fmaj7 F#dim7", "Cmaj7 G7", "Cmaj7"
         ]
       }
@@ -2199,7 +2280,7 @@ const AUTUMN_LEAVES_MELODY = [
         const BT = { "16": .25, "8": .5, "4": 1, "4.": 1.5, "trip8": 1 / 3, "trip16": 1 / 6, z16: .25, z8: .5, z4: 1 };
         let rhythms;
         if (len > 1.5) rhythms = ((JAZZ_RHYTHMS.halves && JAZZ_RHYTHMS.halves.back) || []).map(h => h.p)
-          .filter(p => p.every(t => BT[t] !== undefined) && p.filter(t => !t.startsWith("z")).length <= cell.d.length && p.filter(t => !t.startsWith("z")).length >= 2 && !p.every(t => t === "8"));
+          .filter(p => p.every(t => BT[t] !== undefined) && p.filter(t => !t.startsWith("z")).length <= Math.min(5, cell.d.length) && p.filter(t => !t.startsWith("z")).length >= 2 && !p.every(t => t === "8"));   // フィルは2拍で5音まで（詰め込みすぎない）
         else rhythms = [["8", "8"], ["trip8", "trip8", "trip8"], ["16", "16", "8"], ["z8", "8"], ["8", "16", "16"]];
         if (!rhythms.length) rhythms = [["8", "8", "8", "8"]];
         const rp = rhythms[Math.floor(rnd() * rhythms.length)];
@@ -2214,10 +2295,11 @@ const AUTUMN_LEAVES_MELODY = [
           const d = BT[tk];
           if (tk.startsWith("z")) { out.push({ abs: t0, dur: d, notes: null }); t0 += d; return; }
           let m = base + offs[j++];
+          while (m > 50 && m - 12 >= MIN_BASS_MIDI) m -= 12;     // 音域の広いトライアドは、高すぎる音だけ1オクターブ下げる
           if (j === k && changes && k > 1) { const a = approach(prev); if (a !== null) m = a; }
           out.push({ abs: t0, dur: d, notes: [m] }); prev = m; t0 += d;
         });
-        out.style = `フィル：トライアド「${cell.cat}」の${k}音を、ジャズのリズムで ${apText}`;
+        out.style = k >= 2 ? `フィル：トライアド「${cell.cat}」の${k}音を、ジャズのリズムで ${apText}` : `フィル：コードトーンを1音（裏拍で入れる） ${apText}`;
         return out;
       }
       if (type === "chord") {
@@ -3657,7 +3739,7 @@ const AUTUMN_LEAVES_MELODY = [
                     key={tab.id}
                     disabled={off}
                     onClick={() => setCategory(tab.id)}
-                    title={tab.desc || (off ? "テーマのメロディが入っている曲（Autumn Leaves）で使えます" : "")}
+                    title={tab.desc || (off ? "テーマのメロディが入っている曲（Autumn Leaves・Blue Bossa・St. Thomas・Days of Wine and Roses）で使えます" : "")}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
                       category === tab.id
                         ? "bg-white text-amber-600 shadow-sm"
