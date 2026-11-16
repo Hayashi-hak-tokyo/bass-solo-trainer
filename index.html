@@ -96,6 +96,8 @@
     const BACH_WEIGHT = 1.0;    // Chromatic Fantasy 由来（マイナー用）フレーズの選ばれやすさ
     const CORRENTE_WEIGHT = 1.0; // Bach Corrente 由来トライアドフレーズの選ばれやすさ
     const PRELUDE_WEIGHT = 1.0;  // プレリュード BWV846 由来トライアドフレーズの選ばれやすさ
+    const CHRISTIAN_WEIGHT = 1.2; // Solo Flight（Christian）由来フレーズの選ばれやすさ
+    const COLTRANE_PAT_WEIGHT = 0.3; // Coltrane Patterns 由来フレーズの選ばれやすさ（数が多いので控えめ）
     const DONNA_WEIGHT = 1.5;   // Donna Lee 由来フレーズの選ばれやすさ（他フレーズ=1）
 
     const PITCH_CLASSES = {
@@ -549,6 +551,43 @@
     ];
     const CHROMATIC_FANTASY_CHORDS = Array.from({length: CHROMATIC_FANTASY_BARS.length}, () => "Dm7");
 
+    // オータム・リーブスのテーマ（ギター版トレーナーと同じリードシートのデータ。コードメロディのモードで使う）
+    // [音価, 実音MIDI, "-"=次へタイ]、休符は [音価]。ベースでは自動でオクターブ下げて弾く
+const AUTUMN_LEAVES_MELODY = [
+      [["1", 75, "-"]],                                   // 1  Cm7
+      [["4", 75], ["4", 65], ["4", 67], ["4", 69]],       // 2  F7
+      [["2", 74], ["2", 74, "-"]],                        // 3  Bbmaj7
+      [["4", 74], ["4", 63], ["4", 65], ["4", 67]],       // 4  Ebmaj7
+      [["1", 72, "-"]],                                   // 5  Am7b5
+      [["4", 72], ["4", 62], ["4", 64], ["4", 66]],       // 6  D7
+      [["1", 70, "-"]],                                   // 7  Gm7
+      [["8", 70], ["z8"], ["4", 67], ["4", 69], ["4", 70]], // 8  Gm7
+      [["1", 75, "-"]],                                   // 9  Cm7
+      [["4", 75], ["4", 65], ["4", 67], ["4", 69]],       // 10 F7
+      [["2", 74], ["2", 74, "-"]],                        // 11 Bbmaj7
+      [["4", 74], ["4", 63], ["4", 65], ["4", 67]],       // 12 Ebmaj7
+      [["1", 72, "-"]],                                   // 13 Am7b5
+      [["4", 72], ["4", 69], ["4", 72], ["4", 70]],       // 14 D7
+      [["1", 67, "-"]],                                   // 15 Gm7
+      [["4", 67], ["z4"], ["4", 66], ["4", 67]],          // 16 Gm7
+      [["4", 69], ["4", 62], ["2", 69, "-"]],             // 17 Am7b5（B）
+      [["4", 69], ["4", 69], ["4", 67], ["4", 69]],       // 18 D7
+      [["1", 70, "-"]],                                   // 19 Gm7
+      [["4", 70], ["4", 70], ["4", 69], ["4", 70]],       // 20 Gm7
+      [["1", 72, "-"]],                                   // 21 Cm7
+      [["4", 72], ["4", 65], ["4.", 77], ["8", 75]],      // 22 F7
+      [["1", 74, "-"]],                                   // 23 Bbmaj7
+      [["2", 74], ["4", 73], ["4", 74]],                  // 24 Ebmaj7
+      [["4", 75], ["4", 75], ["4", 72], ["4", 72]],       // 25 Am7b5
+      [["2.", 69], ["4", 75]],                            // 26 D7
+      [["2", 74], ["2", 74, "-"]],                        // 27 Gm7
+      [["2", 74], ["2", 67]],                             // 28 Fm7 Bb7
+      [["2.", 72], ["4", 70]],                            // 29 Ebmaj7
+      [["2", 69], ["4", 70], ["4", 62]],                  // 30 Am7b5 D7
+      [["1", 67]],                                        // 31 Gm7
+      [["z4"], ["4", 67], ["4", 69], ["4", 70]]           // 32 Gm7（ピックアップ：ループで1小節目へ）
+    ];
+
     const STANDARD_SONGS = [
       {
         title: "1-6-2-5 (Turnaround in C)", key: "C", measures: 8,
@@ -583,13 +622,14 @@
       {
         title: "Jazz Blues in F", key: "F", measures: 12,
         chords: [
-          "F7", "Bb7", "F7", "F7",
-          "Bb7", "Bb7", "F7", "D7",
+          "F7", "Bb7", "F7", "Cm7 F7",
+          "Bb7", "Bdim7", "F7", "Am7 D7",
           "Gm7", "C7", "F7 D7", "Gm7 C7"
         ]
       },
       {
         title: "Autumn Leaves", key: "Gm", measures: 32,
+        melodyBars: AUTUMN_LEAVES_MELODY,          // テーマのメロディ（コードメロディのモードで使う）
         chords: [
           "Cm7", "F7", "Bbmaj7", "Ebmaj7", "Am7b5", "D7", "Gm7", "Gm7",
           "Cm7", "F7", "Bbmaj7", "Ebmaj7", "Am7b5", "D7", "Gm7", "Gm7",
@@ -1116,6 +1156,372 @@
       { cat: "Triad Corrente 16th 21", p:["16","16","16","16","16","16","16","16","16","16","16","16","4"], d:["s10","s4","s5","s7","s0","s4","s7","s4","s0","s7","s5","s4","s10"], q:["dom"], authentic:true, w:CORRENTE_WEIGHT }, // 原曲110小節（F#7上のアルペジオ）＋折り返し
     ];
 
+    // チャーリー・クリスチャン「Solo Flight」完コピ（ギター版トレーナーのデータ）から抽出した1小節フレーズ
+    // 音はコードのルートからの半音数（sN）。ベースでは音域に合わせてオクターブを自動で選ぶ
+    const CHRISTIAN_PHRASES = [
+      { cat: "Christian Solo Flight 1", p:["8","8","8","8","4","z4"], d:["s11","s12","s16","s19","s21"], q:["maj"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 3", p:["8","8","8","8","8","8","8","8"], d:["s15","s12","s9","s7","s6","s5","s4","s0"], q:["min"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 4", p:["8","8","8","8","8","8","z4"], d:["s10","s16","s19","s21","s22","s26"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 5", p:["z8","4.","8","8","z8","8"], d:["s0","s4","s7","s1"], q:["maj"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 6", p:["z4","8","8","8","8","8","8"], d:["s3","s6","s9","s8","s4","s1"], q:["dim"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 7", p:["8","8","8","8","8","8","8","8"], d:["s11","s10","s9","s12","s15","s19","s26","s25"], q:["min"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 8", p:["8","8","8","8","8","8","z4"], d:["s16","s14","s12","s11","s10","s21"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 13", p:["8","8","8","8","8","8","8","8"], d:["s4","s2","s1","s0","s12","s0","s11","s0"], q:["maj"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 17", p:["8","8","8","4.","z4"], d:["s7","s5","s3","s4"], q:["maj"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 19", p:["z8","8","z8","8","z8","8","z8","8"], d:["s10","s9","s12","s15"], q:["min"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 20", p:["8","8","8","8","8","8","8","8"], d:["s14","s21","s19","s17","s13","s10","s7","s5"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 22", p:["8","8","8","8","4.","8"], d:["s3","s6","s9","s13","s15","s13"], q:["dim"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 23", p:["z4","8","8","8","8","8","8"], d:["s21","s22","s19","s15","s12","s10"], q:["min"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 24", p:["8","8","8","8","8","8","z4"], d:["s4","s7","s10","s14","s21","s19"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 29", p:["8","8","4","z8","8","8","8"], d:["s12","s4","s10","s7","s9","s10"], q:["maj"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 34", p:["z8","8","8","8","8","8","z4"], d:["s0","s3","s6","s9","s9"], q:["dim"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 35", p:["z8","8","4","8","8","8","8"], d:["s12","s14","s9","s3","s5","s7"], q:["min"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 36", p:["8","8","8","8","8","4."], d:["s10","s7","s6","s5","s4","s5"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 39", p:["z4","z8","8","8","8","8","8"], d:["s3","s9","s7","s3","s0"], q:["min"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 40", p:["8","8","8","z8","8","8","8","8"], d:["s13","s14","s13","s12","s10","s13","s12"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 45", p:["8","8","8","8","8","8","4"], d:["s15","s19","s16","s15","s14","s12","s11"], q:["maj"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 56", p:["8","4","8","z4","z8","8"], d:["s12","s5","s9","s17"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 57", p:["8","8","8","8","8","8","z8","8"], d:["s4","s7","s4","s3","s2","s9","s7"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 58", p:["8","8","8","8","8","8","8","8"], d:["s31","s26","s22","s19","s18","s17","s16","s11"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 59", p:["8","8","8","8","8","8","8","8"], d:["s4","s7","s10","s14","s21","s19","s18","s13"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 60", p:["8","8","8","8","8","8","z4"], d:["s10","s7","s6","s5","s4","s12"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 67", p:["z8","4.","8","8","z8","8"], d:["s12","s10","s9","s7"], q:["min"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 68", p:["8","8","8","16","16","8","8","z8","8"], d:["s4","s0","s7","s10","s14","s21","s19","s17"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 69", p:["z8","8","8","8","8","8","8","8"], d:["s19","s16","s12","s9","s12","s16","s19"], q:["maj"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 70", p:["8","8","8","8","8","8","8","8"], d:["s0","s3","s6","s9","s12","s15","s13","s8"], q:["dim"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 71", p:["8","8","8","8","8","8","8","8"], d:["s15","s17","s11","s10","s9","s12","s15","s19"], q:["min"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 73", p:["z8","4.","8","8","8","8"], d:["s0","s12","s0","s11","s0"], q:["maj"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 74", p:["8","8","8","8","8","8","z8","8"], d:["s10","s9","s7","s5","s4","s7","s9"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 75", p:["8","8","8","8","8","8","8","16","16"], d:["s14","s10","s7","s6","s5","s4","s7","s10","s14"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 76", p:["8","8","8","8","8","8","8","8"], d:["s21","s19","s14","s10","s7","s6","s5","s4"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 82", p:["8","8","8","16","16","8","8","8","8"], d:["s16","s0","s7","s10","s14","s21","s19","s17","s12"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 83", p:["8","8","8","8","8","8","8","8"], d:["s16","s12","s9","s7","s11","s12","s16","s19"], q:["maj"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 85", p:["8","8","8","8","8","8","8","8"], d:["s15","s12","s11","s10","s9","s12","s15","s19"], q:["min"], authentic:true, w:CHRISTIAN_WEIGHT },
+      { cat: "Christian Solo Flight 86", p:["8","8","z8","8","z8","8","z4"], d:["s21","s21","s21","s10"], q:["dom"], authentic:true, w:CHRISTIAN_WEIGHT },
+    ];
+
+    // 「John Coltrane Patterns」（Eric Dannewitz 編）から読み取ったフレーズ。原本は同じ型を12キーで書いているので、
+    // 3キー以上で同じ形に読めたものだけを採用（読み取りミスを除く）。音はコードのルートからの半音数（sN）
+    const COLTRANE_PATTERN_PHRASES = [
+      { cat: "Coltrane Patterns 1", p:["8","8","8","8","8","8","8","8"], d:["s10","s12","s14","s17","s16","s14","s12","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.2
+      { cat: "Coltrane Patterns 2", p:["8","8","8","8","8","8","z4"], d:["s7","s2","s5","s2","s4","s0"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.2
+      { cat: "Coltrane Patterns 3", p:["8","8","8","8","8","8","8","8"], d:["s7","s10","s9","s7","s12","s10","s9","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.4
+      { cat: "Coltrane Patterns 4", p:["8","8","8","8","8","8","16","16","16","16"], d:["s12","s9","s5","s2","s3","s5","s7","s10","s14","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.4
+      { cat: "Coltrane Patterns 5", p:["8","8","8","8","8","8","z8","8"], d:["s19","s15","s13","s10","s20","s15","s10"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.5
+      { cat: "Coltrane Patterns 6", p:["8","8","8","8","8","8","4"], d:["s14","s10","s8","s2","s5","s2","s4"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.5
+      { cat: "Coltrane Patterns 7", p:["8","8","8","8","8","8","8","8"], d:["s7","s9","s10","s7","s12","s9","s4","s0"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.6
+      { cat: "Coltrane Patterns 8", p:["4","8","8","8","8","8","8"], d:["s21","s16","s12","s10","s12","s16","s21"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.6
+      { cat: "Coltrane Patterns 9", p:["8","8","8","8","8","8","8","8"], d:["s17","s14","s15","s17","s19","s15","s14","s9"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.7
+      { cat: "Coltrane Patterns 10", p:["8","8","8","8","4","z4"], d:["s11","s8","s4","s1","s8"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.7
+      { cat: "Coltrane Patterns 11", p:["8","8","8","8","8","8","8","8"], d:["s12","s11","s12","s14","s15","s14","s12","s11"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.7
+      { cat: "Coltrane Patterns 12", p:["z8","8","z8","8","8","8","8","8"], d:["s12","s12","s19","s15","s12","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.8
+      { cat: "Coltrane Patterns 13", p:["8","8","8","8","8","8","z4"], d:["s6","s14","s5","s2","s4","s12"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.8
+      { cat: "Coltrane Patterns 14", p:["z8","8","z8","8","8","8","8","8"], d:["s7","s3","s7","s12","s11","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.9
+      { cat: "Coltrane Patterns 15", p:["8","8","z4","8","8","8","8"], d:["s5","s2","s2","s5","s4","s2"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.9
+      { cat: "Coltrane Patterns 16", p:["z8","8","8","8","8","8","8","8"], d:["s7","s12","s15","s11","s15","s19","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.9
+      { cat: "Coltrane Patterns 17", p:["8","8","8","8","16","16","16","16","8","z8"], d:["s10","s9","s7","s5","s4","s7","s10","s14","s12"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.9
+      { cat: "Coltrane Patterns 18", p:["8","8","8","8","8","8","8","8"], d:["s0","s3","s7","s10","s14","s12","s10","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.10
+      { cat: "Coltrane Patterns 19", p:["8","8","z4","8","16","16","8","8"], d:["s3","s4","s3","s5","s3","s2","s0"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.10
+      { cat: "Coltrane Patterns 20", p:["z16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s2","s3","s5","s7","s9","s10","s12","s14","s15","s17","s19","s21","s22","s19","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.10
+      { cat: "Coltrane Patterns 21", p:["trip8","trip8","trip8","trip8","trip8","trip8","16","16","16","16","16","16","16","16"], d:["s2","s2","s5","s3","s5","s7","s9","s10","s12","s14","s15","s14","s12","s10"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.12
+      { cat: "Coltrane Patterns 22", p:["16","16","trip16","trip16","trip16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s7","s9","s10","s11","s12","s14","s11","s12","s14","s16","s17","s19","s21","s22","s21","s19","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.13
+      { cat: "Coltrane Patterns 23", p:["8","8","8","8","8","8","8","8"], d:["s5","s7","s9","s10","s14","s11","s12","s14"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.14
+      { cat: "Coltrane Patterns 24", p:["trip8","trip8","trip8","8","8","8","8","8","8"], d:["s10","s12","s10","s9","s7","s6","s3","s2","s0"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.14
+      { cat: "Coltrane Patterns 25", p:["z8","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s12","s14","s15","s17","s19","s11","s15","s19","s11","s15","s19","s7","s9","s12"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.15
+      { cat: "Coltrane Patterns 26", p:["16","16","16","16","16","16","16","16","4","z4"], d:["s22","s21","s19","s17","s16","s14","s12","s10","s9"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.15
+      { cat: "Coltrane Patterns 27", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s5","s4","s5","s7","s9","s10","s12","s14","s15","s14","s12","s10","s9","s7","s5","s4"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.15
+      { cat: "Coltrane Patterns 28", p:["8","8","8","8","8","8","8","8"], d:["s12","s11","s12","s14","s15","s7","s8","s9"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.18
+      { cat: "Coltrane Patterns 29", p:["8","8","8","8","8","8","8","8"], d:["s9","s10","s9","s7","s6","s3","s2","s0"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.18
+      { cat: "Coltrane Patterns 30", p:["4.","8","8","8","8","8"], d:["s12","s9","s10","s7","s3","s0"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.18
+      { cat: "Coltrane Patterns 31", p:["8","8","8","8","8","8","8","8"], d:["s16","s14","s12","s11","s10","s15","s19","s22"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.18
+      { cat: "Coltrane Patterns 32", p:["4.","8","8","8","8","8"], d:["s12","s11","s10","s9","s7","s5"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.19
+      { cat: "Coltrane Patterns 33", p:["8","8","8","8","8","8","8","8"], d:["s10","s9","s7","s5","s12","s8","s4","s0"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.19
+      { cat: "Coltrane Patterns 34", p:["8","8","8","8","8","8","z4"], d:["s19","s15","s12","s7","s11","s19"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.19
+      { cat: "Coltrane Patterns 35", p:["8","8","8","8","8","8","8","8"], d:["s12","s14","s12","s10","s7","s10","s12","s14"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.21
+      { cat: "Coltrane Patterns 36", p:["4.","8","8","8","8","8"], d:["s21","s19","s17","s14","s10","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.21
+      { cat: "Coltrane Patterns 37", p:["8","8","4","8","8","8","8"], d:["s3","s5","s2","s2","s3","s2","s0"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.21
+      { cat: "Coltrane Patterns 38", p:["8","8","8","8","8","8","8","8"], d:["s17","s14","s10","s7","s16","s14","s12","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.21
+      { cat: "Coltrane Patterns 39", p:["z4","trip8","trip8","trip8","trip8","trip8","trip8","4"], d:["s0","s3","s7","s10","s14","s17","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.22
+      { cat: "Coltrane Patterns 40", p:["z4","8","8","16","16","16","16","16","16","16","16"], d:["s5","s5","s3","s5","s7","s10","s14","s15","s11","s14"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.22
+      { cat: "Coltrane Patterns 41", p:["8","z8","16","16","16","16","16","16","16","16","4"], d:["s7","s10","s9","s7","s6","s5","s4","s2","s1","s1"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.22
+      { cat: "Coltrane Patterns 42", p:["z8","8","trip8","trip8","trip8","8","8","8","8"], d:["s19","s15","s12","s7","s11","s7","s10","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.24
+      { cat: "Coltrane Patterns 43", p:["8","8","8","8","8","8","8","8"], d:["s7","s5","s4","s2","s0","s2","s4","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.24
+      { cat: "Coltrane Patterns 44", p:["8","8","8","8","8","8","8","8"], d:["s7","s9","s10","s14","s10","s11","s14","s11"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.25
+      { cat: "Coltrane Patterns 45", p:["8","8","8","8","8","8","8","8"], d:["s7","s10","s9","s7","s12","s8","s4","s1"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.25
+      { cat: "Coltrane Patterns 46", p:["8","8","8","8","8","8","8","8"], d:["s14","s10","s9","s7","s12","s14","s16","s19"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.25
+      { cat: "Coltrane Patterns 47", p:["8","8","8","8","8","8","8","8"], d:["s17","s16","s15","s14","s12","s10","s9","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.26
+      { cat: "Coltrane Patterns 48", p:["8","8","8","8","8","8","trip8","trip8","trip8"], d:["s0","s2","s3","s5","s10","s4","s7","s10","s13"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.26
+      { cat: "Coltrane Patterns 49", p:["8","8","2","8","8"], d:["s7","s10","s10","s7","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.27
+      { cat: "Coltrane Patterns 50", p:["8","8","8","8","8","8","8","8"], d:["s9","s7","s6","s7","s12","s8","s4","s2"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.27
+      { cat: "Coltrane Patterns 51", p:["8","8","8","8","8","8","8","8"], d:["s3","s5","s7","s9","s10","s11","s14","s11"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.27
+      { cat: "Coltrane Patterns 52", p:["8","8","8","8","8","8","8","8"], d:["s19","s18","s17","s16","s14","s10","s9","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.28
+      { cat: "Coltrane Patterns 53", p:["2","8","8","8","8"], d:["s10","s10","s7","s5","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.28
+      { cat: "Coltrane Patterns 54", p:["8","8","8","8","8","8","8","8"], d:["s14","s10","s9","s7","s12","s8","s4","s1"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.28
+      { cat: "Coltrane Patterns 55", p:["8","8","8","8","8","8","8","8"], d:["s12","s14","s12","s7","s12","s14","s15","s16"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.29
+      { cat: "Coltrane Patterns 56", p:["8","8","8","8","8","8","8","8"], d:["s12","s10","s9","s7","s5","s7","s9","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.29
+      { cat: "Coltrane Patterns 57", p:["8","8","8","8","8","8","8","8"], d:["s10","s14","s10","s7","s12","s14","s15","s16"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.29
+      { cat: "Coltrane Patterns 58", p:["16","16","8","8","16","16","8","8","8","16","16"], d:["s17","s16","s14","s14","s12","s11","s10","s9","s9","s7","s5"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.30
+      { cat: "Coltrane Patterns 59", p:["4","z4","8","8","8","8"], d:["s12","s8","s12","s16","s14"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.30
+      { cat: "Coltrane Patterns 60", p:["8","8","8","8","8","8","8","8"], d:["s12","s11","s12","s15","s19","s11","s15","s19"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.31
+      { cat: "Coltrane Patterns 61", p:["8","8","8","8","8","8","8","8"], d:["s3","s2","s3","s5","s7","s6","s5","s4"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.31
+      { cat: "Coltrane Patterns 62", p:["8","8","8","8","8","8","8","8"], d:["s10","s9","s7","s5","s4","s0","s4","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.31
+      { cat: "Coltrane Patterns 63", p:["z4","8","8","8","8","8","8"], d:["s17","s16","s15","s14","s12","s10"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.32
+      { cat: "Coltrane Patterns 64", p:["8","8","8","8","8","8","8","8"], d:["s16","s14","s12","s11","s10","s12","s14","s15"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.32
+      { cat: "Coltrane Patterns 65", p:["8","8","8","8","8","8","8","8"], d:["s0","s2","s3","s5","s7","s10","s9","s5"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.33
+      { cat: "Coltrane Patterns 66", p:["8","8","8","8","8","8","8","8"], d:["s14","s10","s7","s9","s12","s9","s4","s0"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.33
+      { cat: "Coltrane Patterns 67", p:["8","8","8","8","8","8","8","8"], d:["s12","s11","s9","s8","s7","s6","s5","s4"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.33
+      { cat: "Coltrane Patterns 68", p:["8","8","8","8","8","8","8","8"], d:["s10","s12","s14","s16","s21","s19","s16","s12"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.33
+      { cat: "Coltrane Patterns 69", p:["8","8","8","8","8","8","8","8"], d:["s9","s7","s6","s2","s7","s9","s10","s11"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.34
+      { cat: "Coltrane Patterns 70", p:["2","16","16","16","16","4"], d:["s10","s10","s7","s5","s3","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.34
+      { cat: "Coltrane Patterns 71", p:["4","trip8","trip8","trip8","8","8","z4"], d:["s21","s17","s14","s10","s19","s24"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.35
+      { cat: "Coltrane Patterns 72", p:["z4","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s12","s11","s12","s14","s15","s17","s19","s22","s21","s17","s19","s21"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.36
+      { cat: "Coltrane Patterns 73", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s17","s14","s18","s14","s19","s16","s12","s11","s10","s12","s14","s18","s21","s19","s18","s14"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.36
+      { cat: "Coltrane Patterns 74", p:["16","16","16","16","16","16","16","16","16","16","trip16","trip16","trip16","z8","8"], d:["s12","s8","s9","s10","s12","s14","s15","s19","s23","s20","s21","s23","s24","s29"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.37
+      { cat: "Coltrane Patterns 75", p:["8","8","8","8","16","16","16","16","z4"], d:["s24","s22","s21","s19","s17","s16","s14","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.37
+      { cat: "Coltrane Patterns 76", p:["z4","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s17","s19","s21","s17","s19","s15","s12","s7","s10","s7","s9","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.38
+      { cat: "Coltrane Patterns 77", p:["16","16","16","16","16","8","16","16","16","16","16","16","16","16","16"], d:["s10","s12","s14","s16","s21","s24","s22","s21","s19","s18","s16","s14","s10","s9","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.38
+      { cat: "Coltrane Patterns 78", p:["8","8","8","8","4","16","16","16","16"], d:["s14","s17","s14","s14","s14","s14","s12","s10","s9"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.39
+      { cat: "Coltrane Patterns 79", p:["16","16","16","16","16","16","16","16","16","16","16","16","8","z8"], d:["s14","s16","s17","s18","s19","s16","s12","s11","s10","s12","s14","s17","s21"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.39
+      { cat: "Coltrane Patterns 80", p:["4.","16","16","16","16","16","16","8","z8"], d:["s19","s18","s19","s18","s15","s11","s7","s16"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.40
+      { cat: "Coltrane Patterns 81", p:["z4","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s14","s11","s12","s14","s15","s17","s19","s22","s21","s19","s17","s16"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.41
+      { cat: "Coltrane Patterns 82", p:["16","16","16","16","16","16","16","16","16","16","8","8","z8"], d:["s10","s12","s14","s17","s21","s19","s18","s19","s24","s18","s21","s16"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.41
+      { cat: "Coltrane Patterns 83", p:["8","8","8","8","8","8","trip8","trip8","trip8"], d:["s19","s16","s12","s9","s17","s15","s16","s19","s24"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.42
+      { cat: "Coltrane Patterns 84", p:["8","8","8","8","8","8","8","8"], d:["s12","s7","s9","s11","s12","s14","s15","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.43
+      { cat: "Coltrane Patterns 85", p:["8","8","2","8","8"], d:["s0","s2","s2","s2","s0"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.43
+      { cat: "Coltrane Patterns 86", p:["8","8","8","8","8","8","z4"], d:["s12","s10","s5","s2","s9","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.43
+      { cat: "Coltrane Patterns 87", p:["8","8","8","8","8","8","z4"], d:["s3","s5","s7","s10","s6","s10"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.44
+      { cat: "Coltrane Patterns 88", p:["8","8","z8","8","8","8","4"], d:["s0","s3","s7","s10","s7","s10"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.45
+      { cat: "Coltrane Patterns 89", p:["8","8","8","8","z8","8","4"], d:["s14","s10","s14","s10","s10","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.45
+      { cat: "Coltrane Patterns 90", p:["4","z16","16","16","16","16","16","16","16","16","16","16","16"], d:["s10","s14","s16","s18","s21","s18","s19","s21","s22","s24","s26","s30"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.46
+      { cat: "Coltrane Patterns 91", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s15","s17","s14","s12","s11","s9","s7","s5","s15","s14","s12","s11","s9","s7","s5","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.46
+      { cat: "Coltrane Patterns 92", p:["8","8","8","8","8","8","8","8"], d:["s17","s16","s15","s14","s12","s10","s9","s12"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.47
+      { cat: "Coltrane Patterns 93", p:["8","8","8","8","4","z4"], d:["s14","s14","s12","s11","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.47
+      { cat: "Coltrane Patterns 94", p:["z8","8","8","8","16","16","16","16","8","8"], d:["s17","s14","s10","s7","s10","s14","s17","s16","s14"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.48
+      { cat: "Coltrane Patterns 95", p:["8","8","8","8","8","8","8","8"], d:["s3","s5","s7","s10","s6","s9","s10","s12"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.48
+      { cat: "Coltrane Patterns 96", p:["8","8","8","8","16","16","16","16","8","8"], d:["s9","s10","s7","s4","s0","s4","s7","s10","s9","s5"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.48
+      { cat: "Coltrane Patterns 97", p:["16","16","16","16","8","8","8","8","8","8"], d:["s7","s10","s14","s17","s16","s14","s12","s11","s10","s9"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.49
+      { cat: "Coltrane Patterns 98", p:["z8","8","8","8","8","8","8","8"], d:["s1","s2","s5","s3","s5","s7","s10"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.50
+      { cat: "Coltrane Patterns 99", p:["8","8","4","4","16","16","16","16"], d:["s14","s16","s16","s14","s14","s10","s7","s2"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.50
+      { cat: "Coltrane Patterns 100", p:["8","8","8","8","8","8","8","8"], d:["s26","s22","s21","s20","s19","s17","s14","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.51
+      { cat: "Coltrane Patterns 101", p:["8","8","8","8","8","8","8","8"], d:["s12","s11","s10","s12","s14","s16","s17","s19"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.51
+      { cat: "Coltrane Patterns 102", p:["8","8","8","8","2"], d:["s12","s7","s3","s0","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.52
+      { cat: "Coltrane Patterns 103", p:["z4","8","8","8","8","8","8"], d:["s7","s9","s10","s12","s14","s17"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.52
+      { cat: "Coltrane Patterns 104", p:["4","8","8","16","16","16","16","8","8"], d:["s10","s7","s3","s0","s3","s7","s10","s7","s8"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.52
+      { cat: "Coltrane Patterns 105", p:["8","8","8","8","8","8","8","8"], d:["s3","s7","s10","s12","s14","s12","s17","s14"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.53
+      { cat: "Coltrane Patterns 106", p:["z8","8","8","8","8","8","8","8"], d:["s21","s17","s14","s19","s17","s14","s9"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.53
+      { cat: "Coltrane Patterns 107", p:["8","8","z8","8","8","8","8","8"], d:["s10","s12","s17","s21","s19","s17","s14"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.54
+      { cat: "Coltrane Patterns 108", p:["2","8","8","8","8"], d:["s0","s0","s2","s3","s5"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.55
+      { cat: "Coltrane Patterns 109", p:["8","8","8","8","4.","8"], d:["s18","s16","s10","s12","s15","s13"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.55
+      { cat: "Coltrane Patterns 110", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s21","s22","s19","s17","s16","s14","s12","s11","s10","s12","s14","s16","s21","s19","s16","s14"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.55
+      { cat: "Coltrane Patterns 111", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s9","s7","s6","s7","s12","s10","s7","s4","s11","s13","s14","s11","s16","s18","s14","s11"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.57
+      { cat: "Coltrane Patterns 112", p:["16","16","16","16","16","16","16","16","trip16","trip16","trip16","8","z8","8"], d:["s9","s5","s11","s14","s12","s14","s15","s17","s19","s21","s23","s21","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.58
+      { cat: "Coltrane Patterns 113", p:["8","8","8","8","8","8","8","8"], d:["s7","s6","s5","s4","s3","s5","s7","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.59
+      { cat: "Coltrane Patterns 114", p:["8","8","8","8","4","z4"], d:["s9","s7","s6","s2","s8"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.59
+      { cat: "Coltrane Patterns 115", p:["z8","8","8","8","8","8","trip8","trip8","trip8"], d:["s9","s10","s7","s3","s0","s3","s7","s10"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.60
+      { cat: "Coltrane Patterns 116", p:["8","8","8","8","8","8","4"], d:["s16","s12","s14","s10","s13","s10","s6"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.60
+      { cat: "Coltrane Patterns 117", p:["8","8","8","8","8","8","8","8"], d:["s10","s12","s14","s17","s16","s17","s19","s21"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.60
+      { cat: "Coltrane Patterns 118", p:["z4","8","8","8","8","8","8"], d:["s12","s11","s12","s9","s5","s0"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.61
+      { cat: "Coltrane Patterns 119", p:["4","8","8","8","8","8","8"], d:["s7","s10","s7","s9","s10","s12","s14"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.61
+      { cat: "Coltrane Patterns 120", p:["8","8","8","8","8","8","8","8"], d:["s22","s24","s21","s19","s17","s17","s14","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.61
+      { cat: "Coltrane Patterns 121", p:["4","8","8","8","4","8"], d:["s17","s16","s14","s13","s12","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.62
+      { cat: "Coltrane Patterns 122", p:["z8","8","8","8","4","8","8"], d:["s5","s12","s15","s8","s14","s15"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.63
+      { cat: "Coltrane Patterns 123", p:["8","8","8","8","8","8","8","8"], d:["s2","s8","s10","s1","s8","s13","s14","s11"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.63
+      { cat: "Coltrane Patterns 124", p:["4","8","8","8","8","8","8"], d:["s14","s15","s11","s12","s14","s15","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.63
+      { cat: "Coltrane Patterns 125", p:["8","8","8","8","8","8","8","8"], d:["s21","s17","s14","s10","s16","s17","s19","s21"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.63
+      { cat: "Coltrane Patterns 126", p:["16","16","16","16","z16","16","16","16","16","16","16","16","16","16","16","16"], d:["s2","s4","s8","s9","s13","s11","s9","s8","s6","s4","s2","s3","s6","s5","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.64
+      { cat: "Coltrane Patterns 127", p:["16","16","16","16","z16","16","16","16","16","16","16","16","16","16","16","16"], d:["s0","s4","s8","s9","s13","s11","s9","s8","s6","s4","s0","s3","s6","s5","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.64
+      { cat: "Coltrane Patterns 128", p:["8","trip16","trip16","trip16","z4","16","16","16","16","16","16","16","16"], d:["s17","s14","s10","s7","s19","s20","s19","s18","s17","s13","s10","s6"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.65
+      { cat: "Coltrane Patterns 129", p:["trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","8","z8"], d:["s22","s19","s22","s19","s15","s12","s21","s17","s21","s17","s14","s10","s19","s15","s19","s15","s12","s9","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.66
+      { cat: "Coltrane Patterns 130", p:["16","16","z16","16","16","16","16","16","16","16","16","16","16","16","z8"], d:["s14","s10","s17","s21","s19","s17","s14","s16","s14","s12","s9","s10","s21"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.67
+      { cat: "Coltrane Patterns 131", p:["trip8","trip8","trip8","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s9","s9","s9","s9","s7","s5","s2","s7","s2","s5","s2","s4","s9","s0","s2"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.69
+      { cat: "Coltrane Patterns 132", p:["8","8","8","8","8","8","8","8"], d:["s12","s14","s15","s17","s15","s11","s8","s13"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.70
+      { cat: "Coltrane Patterns 133", p:["8","8","8","8","8","8","8","8"], d:["s5","s1","s3","s6","s4","s3","s1","s6"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.70
+      { cat: "Coltrane Patterns 134", p:["z8","8","8","8","8","8","trip8","trip8","trip8"], d:["s12","s15","s19","s17","s13","s10","s15","s12"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.70
+      { cat: "Coltrane Patterns 135", p:["8","8","8","8","8","8","8","8"], d:["s9","s6","s3","s2","s5","s7","s9","s10"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.71
+      { cat: "Coltrane Patterns 136", p:["8","8","8","8","8","8","8","8"], d:["s7","s9","s10","s12","s14","s10","s9","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.71
+      { cat: "Coltrane Patterns 137", p:["16","16","8","16","16","16","16","4","16","16","16","16"], d:["s14","s10","s14","s14","s13","s14","s22","s20","s20","s17","s20","s17"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.72
+      { cat: "Coltrane Patterns 138", p:["16","16","z8","z8","16","16","8","16","16","8","trip16","trip16","trip16"], d:["s12","s10","s14","s17","s19","s19","s17","s19","s19","s17","s19"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.77
+      { cat: "Coltrane Patterns 139", p:["4","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16"], d:["s12","s12","s7","s10","s9","s5","s9","s7","s3","s7","s5","s2","s5","s3","s0","s3","s5","s2","s5"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.78
+      { cat: "Coltrane Patterns 140", p:["8","8","trip8","trip8","trip8","4","trip8","trip8","trip8"], d:["s10","s20","s20","s19","s20","s17","s17","s12","s17"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.79
+      { cat: "Coltrane Patterns 141", p:["8","8","trip8","trip8","trip8","4.","16","16"], d:["s14","s10","s14","s10","s22","s22","s21","s22"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.81
+      { cat: "Coltrane Patterns 142", p:["4","16","16","16","16","4","z4"], d:["s14","s14","s12","s9","s5","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.81
+      { cat: "Coltrane Patterns 143", p:["z8","8","trip8","trip8","trip8","8","8","trip8","trip8","trip8"], d:["s9","s10","s9","s10","s10","s14","s7","s10","s9"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.81
+      { cat: "Coltrane Patterns 144", p:["trip8","trip8","trip8","4","16","16","16","16","16","16","16","16"], d:["s22","s20","s20","s20","s20","s19","s20","s17","s12","s10","s19","s17"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.82
+      { cat: "Coltrane Patterns 145", p:["8","8","8","8","8","8","8","8"], d:["s5","s7","s9","s7","s5","s4","s3","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.82
+      { cat: "Coltrane Patterns 146", p:["8","8","8","8","4","8","8"], d:["s10","s8","s5","s0","s7","s8","s5"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.82
+      { cat: "Coltrane Patterns 147", p:["4","8","8","8","8","8","8"], d:["s3","s5","s8","s7","s6","s5","s4"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.83
+      { cat: "Coltrane Patterns 148", p:["8","8","8","8","8","8","8","8"], d:["s10","s14","s7","s10","s9","s7","s4","s0"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.83
+      { cat: "Coltrane Patterns 149", p:["8","8","8","8","8","8","8","8"], d:["s9","s11","s12","s14","s15","s17","s19","s21"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.84
+      { cat: "Coltrane Patterns 150", p:["8","8","trip8","trip8","trip8","8","8","8","8"], d:["s9","s5","s8","s9","s8","s4","s0","s4","s8"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.84
+      { cat: "Coltrane Patterns 151", p:["8","8","8","8","8","8","8","8"], d:["s9","s12","s7","s5","s3","s5","s7","s10"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.85
+      { cat: "Coltrane Patterns 152", p:["8","8","8","8","8","4."], d:["s1","s4","s6","s8","s3","s8"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.85
+      { cat: "Coltrane Patterns 153", p:["8","8","z8","8","8","8","8","8"], d:["s12","s0","s7","s3","s8","s11","s1"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.86
+      { cat: "Coltrane Patterns 154", p:["8","8","z8","8","8","8","8","8"], d:["s17","s8","s17","s16","s14","s13","s16"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.86
+      { cat: "Coltrane Patterns 155", p:["4","z8","8","8","8","8","8"], d:["s10","s18","s15","s18","s16","s14"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.87
+      { cat: "Coltrane Patterns 156", p:["4","8","8","8","8","8","8"], d:["s10","s9","s10","s16","s14","s11","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.87
+      { cat: "Coltrane Patterns 157", p:["z8","8","8","8","8","8","8","8"], d:["s14","s15","s12","s11","s7","s9","s11"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.88
+      { cat: "Coltrane Patterns 158", p:["8","8","8","8","8","8","8","8"], d:["s7","s9","s10","s12","s7","s10","s9","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.88
+      { cat: "Coltrane Patterns 159", p:["z4","8","8","8","8","8","8"], d:["s7","s8","s7","s6","s5","s4"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.88
+      { cat: "Coltrane Patterns 160", p:["8","8","z8","8","8","8","8","8"], d:["s10","s12","s16","s21","s20","s16","s20"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.88
+      { cat: "Coltrane Patterns 161", p:["8","8","8","8","4","z4"], d:["s5","s1","s2","s5","s2"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.89
+      { cat: "Coltrane Patterns 162", p:["4","8","8","4","8","8"], d:["s7","s5","s7","s5","s3","s5"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.90
+      { cat: "Coltrane Patterns 163", p:["8","8","8","8","4","4"], d:["s10","s8","s10","s8","s8","s4"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.90
+      { cat: "Coltrane Patterns 164", p:["8","8","8","8","8","8","8","8"], d:["s9","s11","s12","s14","s15","s17","s13","s12"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.90
+      { cat: "Coltrane Patterns 165", p:["4","z8","8","8","8","8","8"], d:["s6","s5","s2","s4","s5","s8"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.90
+      { cat: "Coltrane Patterns 166", p:["8","8","8","8","8","8","8","8"], d:["s7","s6","s5","s4","s3","s7","s0","s2"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.91
+      { cat: "Coltrane Patterns 167", p:["8","8","8","8","z8","8","8","8"], d:["s13","s16","s15","s13","s13","s11","s3"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.91
+      { cat: "Coltrane Patterns 168", p:["8","8","8","8","8","8","8","8"], d:["s22","s20","s16","s13","s12","s11","s10","s12"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.91
+      { cat: "Coltrane Patterns 169", p:["8","8","8","8","8","8","8","8"], d:["s3","s6","s8","s9","s11","s13","s8","s11"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.92
+      { cat: "Coltrane Patterns 170", p:["8","8","8","8","8","8","8","8"], d:["s16","s14","s13","s16","s12","s11","s10","s12"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.92
+      { cat: "Coltrane Patterns 171", p:["8","8","8","8","8","8","8","8"], d:["s15","s14","s11","s7","s12","s14","s15","s19"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.93
+      { cat: "Coltrane Patterns 172", p:["8","8","8","8","8","8","z4"], d:["s7","s9","s10","s12","s14","s16"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.93
+      { cat: "Coltrane Patterns 173", p:["8","8","8","8","8","8","8","8"], d:["s9","s7","s6","s4","s3","s6","s1","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.93
+      { cat: "Coltrane Patterns 174", p:["8","8","8","8","4","z4"], d:["s1","s3","s6","s3","s3"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.93
+      { cat: "Coltrane Patterns 175", p:["4","8","8","8","8","8","8"], d:["s10","s9","s10","s9","s7","s5","s4"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.94
+      { cat: "Coltrane Patterns 176", p:["8","8","8","8","8","8","8","8"], d:["s10","s14","s7","s10","s9","s7","s5","s4"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.94
+      { cat: "Coltrane Patterns 177", p:["4","8","8","4.","8"], d:["s3","s7","s10","s10","s7"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.94
+      { cat: "Coltrane Patterns 178", p:["8","8","8","8","8","8","8","8"], d:["s20","s22","s17","s13","s10","s12","s9","s12"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.95
+      { cat: "Coltrane Patterns 179", p:["4","8","8","8","8","8","8"], d:["s15","s10","s14","s12","s14","s15","s17"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.96
+      { cat: "Coltrane Patterns 180", p:["8","8","8","8","4.","8"], d:["s9","s7","s5","s2","s7","s5"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.96
+      { cat: "Coltrane Patterns 181", p:["16","16","16","16","16","16","8","8","trip16","trip16","trip16","4"], d:["s3","s5","s7","s9","s10","s12","s14","s14","s12","s10","s7","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.96
+      { cat: "Coltrane Patterns 182", p:["z8","16","16","16","16","16","16","16","16","trip16","trip16","trip16","16","16","16","16"], d:["s6","s8","s10","s13","s15","s16","s18","s20","s20","s19","s16","s15","s8","s12","s8"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.96
+      { cat: "Coltrane Patterns 183", p:["z8","16","16","16","16","16","16","16","16","trip16","trip16","trip16","16","16","16","16"], d:["s6","s8","s10","s13","s15","s16","s18","s20","s20","s19","s16","s13","s8","s12","s8"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.96
+      { cat: "Coltrane Patterns 184", p:["16","16","16","16","8","16","16","16","16","16","16","16","16","16","16"], d:["s17","s15","s14","s12","s11","s7","s9","s11","s12","s14","s15","s17","s19","s21","s22"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.97
+      { cat: "Coltrane Patterns 185", p:["trip8","trip8","trip8","8","8","16","8","16","trip8","trip8","trip8"], d:["s0","s2","s3","s5","s6","s6","s5","s3","s5","s2","s0"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.98
+      { cat: "Coltrane Patterns 186", p:["4","8","8","16","16","16","16","8","8"], d:["s5","s5","s0","s9","s7","s6","s2","s3","s2"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.98
+      { cat: "Coltrane Patterns 187", p:["z8","16","16","16","16","16","16","16","16","16","16","4"], d:["s7","s9","s11","s12","s14","s15","s17","s19","s21","s22","s24"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.99
+      { cat: "Coltrane Patterns 188", p:["8","16","16","8","4","16","16","8","8"], d:["s21","s17","s14","s10","s20","s16","s13","s10","s19"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.99
+      { cat: "Coltrane Patterns 189", p:["8","8","8","8","8","8","8","8"], d:["s12","s4","s8","s12","s5","s7","s9","s13"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.100
+      { cat: "Coltrane Patterns 190", p:["4","8","8","4.","8"], d:["s10","s13","s12","s12","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.100
+      { cat: "Coltrane Patterns 191", p:["8","8","8","8","8","8","8","8"], d:["s10","s4","s8","s10","s5","s7","s9","s13"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.100
+      { cat: "Coltrane Patterns 192", p:["8","8","8","8","8","8","8","8"], d:["s5","s3","s8","s6","s2","s0","s5","s3"], q:["min"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.102
+      { cat: "Coltrane Patterns 193", p:["8","8","8","8","8","8","8","8"], d:["s6","s4","s9","s7","s3","s1","s6","s4"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.102
+      { cat: "Coltrane Patterns 194", p:["8","8","8","8","8","8","8","8"], d:["s7","s5","s4","s2","s0","s2","s4","s7"], q:["maj"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.102
+      { cat: "Coltrane Patterns 195", p:["8","8","8","8","8","8","8","8"], d:["s7","s4","s2","s0","s4","s5","s7","s9"], q:["maj"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.103
+      { cat: "Coltrane Patterns 196", p:["8","8","8","8","8","8","z4"], d:["s0","s2","s4","s7","s12","s0"], q:["maj"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.105
+      { cat: "Coltrane Patterns 197", p:["8","8","8","8","8","8","4"], d:["s7","s4","s2","s0","s4","s5","s7"], q:["maj"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.106
+      { cat: "Coltrane Patterns 198", p:["8","8","8","8","8","8","8","8"], d:["s0","s2","s4","s7","s12","s7","s4","s0"], q:["maj"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.111
+      { cat: "Coltrane Patterns 199", p:["8","8","8","8","8","8","trip8","trip8","trip8"], d:["s7","s5","s4","s2","s0","s2","s4","s7","s11"], q:["maj"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.112
+      { cat: "Coltrane Patterns 200", p:["4","z8","8","8","8","8","8"], d:["s0","s10","s8","s9","s6","s2"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.114
+      { cat: "Coltrane Patterns 201", p:["z8","8","8","8","4","8","8"], d:["s5","s4","s2","s0","s0","s1"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.115
+      { cat: "Coltrane Patterns 202", p:["4","z8","8","8","8","8","8"], d:["s4","s16","s17","s13","s10","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.116
+      { cat: "Coltrane Patterns 203", p:["8","8","8","8","4","z4"], d:["s14","s16","s12","s9","s12"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.116
+      { cat: "Coltrane Patterns 204", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s4","s7","s9","s11","s14","s11","s12","s14","s16","s17","s16","s14","s13","s9","s11","s9"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.117
+      { cat: "Coltrane Patterns 205", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s19","s16","s17","s14","s16","s17","s16","s14","s13","s9","s7","s9","s17","s9","s12","s13"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.119
+      { cat: "Coltrane Patterns 206", p:["trip8","trip8","trip8","8","8","4.","16","16"], d:["s19","s17","s16","s12","s12","s12","s9","s12"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.120
+      { cat: "Coltrane Patterns 207", p:["2","8","8","8","8"], d:["s14","s12","s13","s10","s6"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.122
+      { cat: "Coltrane Patterns 208", p:["8","8","8","8","8","8","8","8"], d:["s11","s12","s11","s9","s7","s5","s4","s2"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.122
+      { cat: "Coltrane Patterns 209", p:["8","8","8","8","8","8","8","8"], d:["s16","s17","s16","s14","s13","s10","s9","s7"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.123
+      { cat: "Coltrane Patterns 210", p:["8","8","8","8","8","8","8","8"], d:["s12","s7","s12","s16","s13","s9","s11","s13"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.124
+      { cat: "Coltrane Patterns 211", p:["4","z8","8","trip8","trip8","trip8","trip16","trip16","trip16","trip16","trip16","trip16"], d:["s0","s0","s7","s3","s7","s10","s7","s10","s14","s10","s14"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.134
+      { cat: "Coltrane Patterns 212", p:["z8","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s21","s19","s24","s22","s18","s16","s21","s19","s15","s13","s18","s16","s12","s10"], q:["dom"], authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.134
+    ];
+    const COLTRANE_PATTERN_IIV_PHRASES = [
+      { cat: "Coltrane Patterns iiV 2bar 1", p:["z2","8","8","8","8"], d:["s12","s11","s12","s14"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s17","s19","s22","s21","s19","s17","s15"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.2
+      { cat: "Coltrane Patterns iiV 2bar 2", p:["z2","8","8","8","8"], d:["s10","s7","s11","s14"], p2:["8","8","8","8","8","8","z4"], d2:["s12","s7","s10","s7","s9","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.2
+      { cat: "Coltrane Patterns iiV 2bar 3", p:["z2","z8","8","8","8"], d:["s7","s11","s14"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s15","s14","s12","s17","s15","s14","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.4
+      { cat: "Coltrane Patterns iiV 2bar 4", p:["8","8","8","8","8","8","16","16","16","16"], d:["s12","s9","s5","s2","s3","s5","s7","s10","s14","s17"], p2:["4","8","8","4","z4"], d2:["s14","s9","s5","s3"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.4
+      { cat: "Coltrane Patterns iiV 2bar 5", p:["8","8","8","8","8","8","z8","8"], d:["s19","s15","s13","s10","s20","s15","s10"], p2:["8","8","8","8","8","8","4"], d2:["s19","s15","s13","s7","s10","s7","s9"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.5
+      { cat: "Coltrane Patterns iiV 2bar 6", p:["z2","8","8","8","8"], d:["s21","s16","s15","s13"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s14","s15","s12","s17","s14","s9","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.6
+      { cat: "Coltrane Patterns iiV 2bar 7", p:["z2","8","8","8","8"], d:["s21","s17","s15","s13"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s14","s15","s12","s17","s14","s9","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.6
+      { cat: "Coltrane Patterns iiV 2bar 8", p:["2.","8","8"], d:["s14","s14","s14"], p2:["4","8","8","8","8","8","8"], d2:["s14","s9","s5","s3","s5","s9","s14"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.6
+      { cat: "Coltrane Patterns iiV 2bar 9", p:["8","8","8","8","8","8","8","8"], d:["s17","s14","s15","s17","s19","s15","s14","s9"], p2:["8","8","8","8","4","z4"], d2:["s16","s13","s9","s6","s13"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.7
+      { cat: "Coltrane Patterns iiV 2bar 10", p:["8","8","8","8","8","8","8","8"], d:["s12","s11","s12","s14","s15","s14","s12","s11"], p2:["8","16","16","8","8","z2"], d2:["s9","s10","s9","s8","s6"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.7
+      { cat: "Coltrane Patterns iiV 2bar 11", p:["z8","8","z8","8","8","8","8","8"], d:["s12","s12","s19","s15","s12","s7"], p2:["8","8","8","8","8","8","z4"], d2:["s11","s19","s10","s7","s9","s17"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.8
+      { cat: "Coltrane Patterns iiV 2bar 12", p:["z8","8","z8","8","8","8","8","8"], d:["s7","s3","s7","s12","s11","s7"], p2:["8","8","z4","8","8","8","8"], d2:["s10","s7","s7","s10","s9","s7"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.9
+      { cat: "Coltrane Patterns iiV 2bar 13", p:["z8","8","8","8","8","8","8","8"], d:["s7","s12","s15","s11","s15","s19","s17"], p2:["8","8","8","8","16","16","16","16","8","z8"], d2:["s15","s14","s12","s10","s9","s12","s15","s19","s17"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.9
+      { cat: "Coltrane Patterns iiV 2bar 14", p:["8","8","8","8","8","8","8","8"], d:["s0","s3","s7","s10","s14","s12","s10","s7"], p2:["8","8","z4","8","16","16","8","8"], d2:["s8","s9","s8","s10","s8","s7","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.10
+      { cat: "Coltrane Patterns iiV 2bar 15", p:["z16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s2","s3","s5","s7","s9","s10","s12","s14","s15","s17","s19","s21","s22","s19","s17"], p2:["16","16","16","16","16","16","16","16","8","z8","z4"], d2:["s15","s14","s12","s10","s9","s7","s5","s3","s0"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.10
+      { cat: "Coltrane Patterns iiV 2bar 16", p:["trip8","trip8","trip8","trip8","trip8","trip8","16","16","16","16","16","16","16","16"], d:["s14","s14","s17","s15","s17","s19","s21","s22","s24","s26","s27","s26","s24","s22"], p2:["16","16","16","16","trip16","trip16","trip16","trip16","trip16","trip16","8","z8","z4"], d2:["s21","s19","s17","s15","s14","s12","s10","s9","s7","s5","s3"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.12
+      { cat: "Coltrane Patterns iiV 2bar 17", p:["16","16","trip16","trip16","trip16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s7","s9","s10","s11","s12","s14","s11","s12","s14","s16","s17","s19","s21","s22","s21","s19","s17"], p2:["16","16","16","16","8","8","z2"], d2:["s15","s12","s11","s12","s14","s21"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.13
+      { cat: "Coltrane Patterns iiV 2bar 18", p:["8","8","8","8","8","8","8","8"], d:["s5","s7","s9","s10","s14","s11","s12","s14"], p2:["trip8","trip8","trip8","8","8","8","8","8","8"], d2:["s15","s17","s15","s14","s12","s11","s8","s7","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.14
+      { cat: "Coltrane Patterns iiV 2bar 19", p:["8","8","8","8","8","8","8","8"], d:["s12","s11","s12","s14","s15","s7","s8","s9"], p2:["8","8","8","8","8","8","8","8"], d2:["s14","s15","s14","s12","s11","s8","s7","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.18
+      { cat: "Coltrane Patterns iiV 2bar 20", p:["4.","8","8","8","8","8"], d:["s12","s9","s10","s7","s3","s0"], p2:["8","8","8","8","8","8","8","8"], d2:["s9","s7","s5","s4","s3","s8","s12","s15"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.18
+      { cat: "Coltrane Patterns iiV 2bar 21", p:["4.","8","8","8","8","8"], d:["s24","s23","s22","s21","s19","s17"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s14","s12","s10","s17","s13","s9","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.19
+      { cat: "Coltrane Patterns iiV 2bar 22", p:["8","8","8","8","8","8","z4"], d:["s19","s15","s12","s7","s11","s19"], p2:["8","8","8","8","z2"], d2:["s10","s7","s9","s19"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.19
+      { cat: "Coltrane Patterns iiV 2bar 23", p:["z4","z8","8","8","8","8","8"], d:["s15","s11","s15","s19","s22"], p2:["8","8","8","8","z2"], d2:["s21","s17","s19","s15"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.20
+      { cat: "Coltrane Patterns iiV 2bar 24", p:["8","8","8","8","8","8","8","8"], d:["s12","s14","s12","s10","s7","s10","s12","s14"], p2:["4.","8","8","8","8","8"], d2:["s14","s12","s10","s7","s3","s0"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.21
+      { cat: "Coltrane Patterns iiV 2bar 25", p:["8","8","4","8","8","8","8"], d:["s15","s17","s14","s14","s15","s14","s12"], p2:["8","8","8","8","8","8","8","8"], d2:["s10","s7","s3","s0","s9","s7","s5","s3"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.21
+      { cat: "Coltrane Patterns iiV 2bar 26", p:["z4","8","8","16","16","16","16","16","16","16","16"], d:["s5","s5","s3","s5","s7","s10","s14","s15","s11","s14"], p2:["8","z8","16","16","16","16","16","16","16","16","4"], d2:["s12","s15","s14","s12","s11","s10","s9","s7","s6","s6"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.22
+      { cat: "Coltrane Patterns iiV 2bar 27", p:["z2","8","8","8","8"], d:["s17","s16","s15","s14"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s10","s9","s7","s5","s7","s9","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.24
+      { cat: "Coltrane Patterns iiV 2bar 28", p:["8","8","8","8","8","8","8","8"], d:["s7","s9","s10","s14","s10","s11","s14","s11"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s15","s14","s12","s17","s13","s9","s6"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.25
+      { cat: "Coltrane Patterns iiV 2bar 29", p:["z2","8","8","8","8"], d:["s12","s11","s10","s9"], p2:["8","8","8","8","8","8","8","8"], d2:["s7","s3","s2","s0","s5","s7","s9","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.25
+      { cat: "Coltrane Patterns iiV 2bar 30", p:["8","8","8","8","8","8","8","8"], d:["s17","s16","s15","s14","s12","s10","s9","s7"], p2:["8","8","8","8","8","8","trip8","trip8","trip8"], d2:["s5","s7","s8","s10","s15","s9","s12","s15","s18"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.26
+      { cat: "Coltrane Patterns iiV 2bar 31", p:["8","8","2","8","8"], d:["s19","s22","s22","s19","s15"], p2:["8","8","8","8","8","8","8","8"], d2:["s14","s12","s11","s12","s17","s13","s9","s7"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.27
+      { cat: "Coltrane Patterns iiV 2bar 32", p:["8","8","8","8","8","8","8","8"], d:["s3","s5","s7","s9","s10","s11","s14","s11"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s15","s14","s12","s17","s15","s14","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.27
+      { cat: "Coltrane Patterns iiV 2bar 33", p:["z2","8","8","8","8"], d:["s11","s12","s14","s11"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s11","s10","s9","s7","s3","s2","s0"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.28
+      { cat: "Coltrane Patterns iiV 2bar 34", p:["2","8","8","8","8"], d:["s22","s22","s19","s17","s15"], p2:["8","8","8","8","8","8","8","8"], d2:["s19","s15","s14","s12","s17","s13","s9","s6"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.28
+      { cat: "Coltrane Patterns iiV 2bar 35", p:["8","8","8","8","8","8","8","8"], d:["s12","s14","s12","s7","s12","s14","s15","s16"], p2:["8","8","8","8","8","8","8","8"], d2:["s17","s15","s14","s12","s10","s12","s14","s15"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.29
+      { cat: "Coltrane Patterns iiV 2bar 36", p:["8","8","8","8","8","8","8","8"], d:["s10","s14","s10","s7","s12","s14","s15","s16"], p2:["8","8","8","8","8","8","8","8"], d2:["s17","s15","s14","s12","s10","s12","s14","s15"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.29
+      { cat: "Coltrane Patterns iiV 2bar 37", p:["z2","trip8","trip8","trip8","8","16","16"], d:["s21","s22","s23","s24","s23","s22"], p2:["16","16","8","8","16","16","8","8","8","16","16"], d2:["s22","s21","s19","s19","s17","s16","s15","s14","s14","s12","s10"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.30
+      { cat: "Coltrane Patterns iiV 2bar 38", p:["z2","8","8","8","8"], d:["s7","s3","s2","s0"], p2:["4","z4","8","8","8","8"], d2:["s5","s1","s5","s9","s7"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.30
+      { cat: "Coltrane Patterns iiV 2bar 39", p:["8","8","8","8","8","8","8","8"], d:["s15","s14","s15","s17","s19","s18","s17","s16"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s14","s12","s10","s9","s5","s9","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.31
+      { cat: "Coltrane Patterns iiV 2bar 40", p:["z4","8","8","8","8","8","8"], d:["s17","s16","s15","s14","s12","s10"], p2:["8","8","8","8","8","8","8","8"], d2:["s9","s7","s5","s4","s3","s5","s7","s8"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.32
+      { cat: "Coltrane Patterns iiV 2bar 41", p:["8","8","8","8","8","8","8","8"], d:["s12","s14","s15","s17","s19","s22","s21","s17"], p2:["8","8","8","8","8","8","8","8"], d2:["s19","s15","s12","s14","s17","s14","s9","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.33
+      { cat: "Coltrane Patterns iiV 2bar 42", p:["8","8","8","8","8","8","8","8"], d:["s12","s11","s9","s8","s7","s6","s5","s4"], p2:["8","8","8","8","8","8","8","8"], d2:["s3","s5","s7","s9","s14","s12","s9","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.33
+      { cat: "Coltrane Patterns iiV 2bar 43", p:["z4","z8","8","8","8","8","8"], d:["s7","s5","s7","s9","s12"], p2:["8","8","8","8","8","8","8","8"], d2:["s14","s12","s11","s7","s12","s14","s15","s16"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.34
+      { cat: "Coltrane Patterns iiV 2bar 44", p:["2","16","16","16","16","4"], d:["s10","s10","s7","s5","s3","s7"], p2:["16","16","16","16","16","16","z8","z2"], d2:["s7","s5","s3","s2","s0","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.34
+      { cat: "Coltrane Patterns iiV 2bar 45", p:["z4","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s12","s11","s12","s14","s15","s17","s19","s22","s21","s17","s19","s21"], p2:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d2:["s22","s19","s23","s19","s24","s21","s17","s16","s15","s17","s19","s23","s26","s24","s23","s19"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.36
+      { cat: "Coltrane Patterns iiV 2bar 46", p:["16","16","16","16","16","16","16","16","16","16","trip16","trip16","trip16","z8","8"], d:["s12","s8","s9","s10","s12","s14","s15","s19","s23","s20","s21","s23","s24","s29"], p2:["8","8","8","8","16","16","16","16","z4"], d2:["s29","s27","s26","s24","s22","s21","s19","s15"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.37
+      { cat: "Coltrane Patterns iiV 2bar 47", p:["z4","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s17","s19","s21","s17","s19","s15","s12","s7","s10","s7","s9","s17"], p2:["16","16","16","16","16","8","16","16","16","16","16","16","16","16","16"], d2:["s15","s17","s19","s21","s26","s29","s27","s26","s24","s23","s21","s19","s15","s14","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.38
+      { cat: "Coltrane Patterns iiV 2bar 48", p:["8","8","8","8","4","16","16","16","16"], d:["s14","s17","s14","s14","s14","s14","s12","s10","s9"], p2:["16","16","16","16","16","16","16","16","16","16","16","16","8","z8"], d2:["s7","s9","s10","s11","s12","s9","s5","s4","s3","s5","s7","s10","s14"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.39
+      { cat: "Coltrane Patterns iiV 2bar 49", p:["z4","z8","16","16","16","16","16","16","4"], d:["s9","s12","s15","s19","s23","s26","s24"], p2:["4.","16","16","16","16","16","16","8","z8"], d2:["s24","s23","s24","s23","s20","s16","s12","s21"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.40
+      { cat: "Coltrane Patterns iiV 2bar 50", p:["z4","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s14","s11","s12","s14","s15","s17","s19","s22","s21","s19","s17","s16"], p2:["16","16","16","16","16","16","16","16","16","16","8","8","z8"], d2:["s15","s17","s19","s22","s26","s24","s23","s24","s29","s23","s26","s21"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.41
+      { cat: "Coltrane Patterns iiV 2bar 51", p:["z2","z8","8","trip8","trip8","trip8"], d:["s14","s10","s7","s3"], p2:["8","8","8","8","8","8","trip8","trip8","trip8"], d2:["s12","s9","s5","s2","s10","s8","s9","s12","s17"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.42
+      { cat: "Coltrane Patterns iiV 2bar 52", p:["8","8","8","8","8","8","8","8"], d:["s12","s7","s9","s11","s12","s14","s15","s17"], p2:["4.","8","4.","8"], d2:["s19","s15","s12","s7"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.43
+      { cat: "Coltrane Patterns iiV 2bar 53", p:["8","8","2","8","8"], d:["s12","s14","s14","s14","s12"], p2:["8","8","8","8","8","8","z4"], d2:["s17","s15","s10","s7","s14","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.43
+      { cat: "Coltrane Patterns iiV 2bar 54", p:["8","8","8","8","8","8","z4"], d:["s3","s5","s7","s10","s6","s10"], p2:["z2","8","8","8","8"], d2:["s14","s15","s12","s9"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.44
+      { cat: "Coltrane Patterns iiV 2bar 55", p:["8","8","z8","8","8","8","4"], d:["s0","s3","s7","s10","s7","s10"], p2:["8","8","8","8","z8","8","4"], d2:["s7","s3","s7","s3","s3","s0"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.45
+      { cat: "Coltrane Patterns iiV 2bar 56", p:["16","16","16","16","16","16","16","16","16","16","16","16","16","16","16","16"], d:["s15","s17","s14","s12","s11","s9","s7","s5","s15","s14","s12","s11","s9","s7","s5","s3"], p2:["4","z16","16","16","16","16","16","16","16","16","16","16","16"], d2:["s3","s7","s9","s11","s14","s11","s12","s14","s15","s17","s19","s23"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.46
+      { cat: "Coltrane Patterns iiV 2bar 57", p:["8","8","8","8","8","8","8","8"], d:["s17","s16","s15","s14","s12","s10","s9","s12"], p2:["8","8","8","8","4","z4"], d2:["s7","s7","s5","s4","s3"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.47
+      { cat: "Coltrane Patterns iiV 2bar 58", p:["8","8","8","8","8","8","8","8"], d:["s3","s5","s7","s10","s6","s9","s10","s12"], p2:["8","8","8","8","16","16","16","16","8","8"], d2:["s14","s15","s12","s9","s5","s9","s12","s15","s14","s10"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.48
+      { cat: "Coltrane Patterns iiV 2bar 59", p:["z2","z8","8","8","8"], d:["s10","s7","s3"], p2:["16","16","16","16","8","8","8","8","8","8"], d2:["s0","s3","s7","s10","s9","s7","s5","s4","s3","s2"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.49
+      { cat: "Coltrane Patterns iiV 2bar 60", p:["z8","8","8","8","8","8","8","8"], d:["s13","s14","s17","s15","s17","s19","s22"], p2:["8","8","4","4","16","16","16","16"], d2:["s19","s21","s21","s19","s19","s15","s12","s7"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.50
+      { cat: "Coltrane Patterns iiV 2bar 61", p:["8","8","8","8","8","8","8","8"], d:["s17","s16","s15","s14","s12","s10","s9","s7"], p2:["8","8","8","8","8","8","8","8"], d2:["s5","s4","s3","s5","s7","s9","s10","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.51
+      { cat: "Coltrane Patterns iiV 2bar 62", p:["8","8","8","8","2"], d:["s12","s7","s3","s0","s7"], p2:["z4","8","8","8","8","8","8"], d2:["s0","s2","s3","s5","s7","s10"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.52
+      { cat: "Coltrane Patterns iiV 2bar 63", p:["4","8","8","16","16","16","16","8","8"], d:["s10","s7","s3","s0","s3","s7","s10","s7","s8"], p2:["4","z8","8","4.","8"], d2:["s9","s7","s5","s4"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.52
+      { cat: "Coltrane Patterns iiV 2bar 64", p:["8","8","8","8","8","8","8","8"], d:["s3","s7","s10","s12","s14","s12","s17","s14"], p2:["z8","8","8","8","8","8","8","8"], d2:["s14","s10","s7","s12","s10","s7","s2"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.53
+      { cat: "Coltrane Patterns iiV 2bar 65", p:["z4","z8","8","8","8","8","8"], d:["s5","s1","s2","s5","s2"], p2:["8","8","z8","8","8","8","8","8"], d2:["s3","s5","s10","s14","s12","s10","s7"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.54
+      { cat: "Coltrane Patterns iiV 2bar 66", p:["2","8","8","8","8"], d:["s12","s12","s14","s15","s17"], p2:["8","8","8","8","4.","8"], d2:["s11","s9","s3","s5","s8","s6"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.55
+      { cat: "Coltrane Patterns iiV 2bar 67", p:["8","8","8","8","8","8","8","8"], d:["s19","s18","s17","s16","s15","s17","s19","s15"], p2:["8","8","8","8","4","z4"], d2:["s14","s12","s11","s7","s13"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.59
+      { cat: "Coltrane Patterns iiV 2bar 68", p:["z8","8","8","8","8","8","trip8","trip8","trip8"], d:["s21","s22","s19","s15","s12","s15","s19","s22"], p2:["8","8","8","8","8","8","4"], d2:["s21","s17","s19","s15","s18","s15","s11"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.60
+      { cat: "Coltrane Patterns iiV 2bar 69", p:["z2","8","8","8","8"], d:["s9","s10","s12","s14"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s17","s19","s22","s21","s22","s24","s26"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.60
+      { cat: "Coltrane Patterns iiV 2bar 70", p:["z4","8","8","8","8","8","8"], d:["s12","s11","s12","s9","s5","s0"], p2:["8","8","8","8","8","8","8","8"], d2:["s3","s5","s7","s10","s9","s10","s12","s14"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.61
+      { cat: "Coltrane Patterns iiV 2bar 71", p:["4","8","8","8","8","8","8"], d:["s7","s10","s7","s9","s10","s12","s14"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s17","s14","s12","s10","s10","s7","s3"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.61
+      { cat: "Coltrane Patterns iiV 2bar 72", p:["4","z4","8","8","4"], d:["s9","s12","s11","s10"], p2:["4","8","8","8","4","8"], d2:["s10","s9","s7","s6","s5","s3"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.62
+      { cat: "Coltrane Patterns iiV 2bar 73", p:["z8","8","8","8","4","8","8"], d:["s5","s12","s15","s8","s14","s15"], p2:["8","8","8","8","8","8","8","8"], d2:["s7","s13","s15","s6","s13","s18","s19","s16"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.63
+      { cat: "Coltrane Patterns iiV 2bar 74", p:["4","8","8","8","8","8","8"], d:["s14","s15","s11","s12","s14","s15","s17"], p2:["8","8","8","8","8","8","8","8"], d2:["s14","s10","s7","s3","s9","s10","s12","s14"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.63
+      { cat: "Coltrane Patterns iiV 2bar 75", p:["trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","trip16","8","z8"], d:["s22","s19","s22","s19","s15","s12","s21","s17","s21","s17","s14","s10","s19","s15","s19","s15","s12","s9","s17"], p2:["z2","16","16","16","16","16","16","z8"], d2:["s14","s12","s10","s7","s9","s17"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.66
+      { cat: "Coltrane Patterns iiV 2bar 76", p:["trip8","trip8","trip8","4","z4","16","16","z16","16"], d:["s15","s13","s12","s7","s15","s12","s15"], p2:["16","16","z16","16","16","16","16","16","16","16","16","16","16","16","z8"], d2:["s19","s15","s22","s26","s24","s22","s19","s21","s19","s17","s14","s15","s26"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.67
+      { cat: "Coltrane Patterns iiV 2bar 77", p:["8","8","8","8","8","8","8","8"], d:["s12","s14","s15","s17","s15","s11","s8","s13"], p2:["8","8","8","8","8","8","8","8"], d2:["s10","s6","s8","s11","s9","s8","s6","s11"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.70
+      { cat: "Coltrane Patterns iiV 2bar 78", p:["z8","8","8","8","8","8","trip8","trip8","trip8"], d:["s12","s15","s19","s17","s13","s10","s15","s12"], p2:["z2","8","8","8","8"], d2:["s9","s8","s7","s11"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.70
+      { cat: "Coltrane Patterns iiV 2bar 79", p:["8","8","8","8","8","8","8","8"], d:["s9","s6","s3","s2","s5","s7","s9","s10"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s14","s15","s17","s19","s15","s14","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.71
+      { cat: "Coltrane Patterns iiV 2bar 80", p:["4","16","16","16","16","4","z4"], d:["s14","s14","s12","s9","s5","s3"], p2:["z8","8","trip8","trip8","trip8","8","8","trip8","trip8","trip8"], d2:["s14","s15","s14","s15","s15","s19","s12","s15","s14"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.81
+      { cat: "Coltrane Patterns iiV 2bar 81", p:["8","8","8","8","8","8","8","8"], d:["s17","s19","s21","s19","s17","s16","s15","s19"], p2:["8","8","8","8","4","8","8"], d2:["s15","s13","s10","s5","s12","s13","s10"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.82
+      { cat: "Coltrane Patterns iiV 2bar 82", p:["4","8","8","8","8","8","8"], d:["s15","s17","s20","s19","s18","s17","s16"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s19","s12","s15","s14","s12","s9","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.83
+      { cat: "Coltrane Patterns iiV 2bar 83", p:["8","8","8","8","8","8","8","8"], d:["s9","s12","s7","s5","s3","s5","s7","s10"], p2:["8","8","8","8","8","4."], d2:["s6","s9","s11","s13","s8","s13"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.85
+      { cat: "Coltrane Patterns iiV 2bar 84", p:["8","8","z8","8","8","8","8","8"], d:["s12","s0","s7","s3","s8","s11","s1"], p2:["8","8","z8","8","8","8","8","8"], d2:["s10","s1","s10","s9","s7","s6","s9"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.86
+      { cat: "Coltrane Patterns iiV 2bar 85", p:["8","8","8","8","8","8","8","8"], d:["s9","s11","s12","s14","s15","s17","s19","s21"], p2:["4","z8","8","8","8","8","8"], d2:["s15","s23","s20","s23","s21","s19"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.87
+      { cat: "Coltrane Patterns iiV 2bar 86", p:["z8","8","8","8","8","8","8","8"], d:["s14","s15","s12","s11","s7","s9","s11"], p2:["8","8","8","8","8","8","8","8"], d2:["s12","s14","s15","s17","s12","s15","s14","s12"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.88
+      { cat: "Coltrane Patterns iiV 2bar 87", p:["z4","8","8","8","8","8","8"], d:["s7","s8","s7","s6","s5","s4"], p2:["8","8","z8","8","8","8","8","8"], d2:["s3","s5","s9","s14","s13","s9","s13"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.88
+      { cat: "Coltrane Patterns iiV 2bar 88", p:["z2","8","8","8","8"], d:["s15","s7","s11","s13"], p2:["8","8","8","8","4","z4"], d2:["s10","s6","s7","s10","s7"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.89
+      { cat: "Coltrane Patterns iiV 2bar 89", p:["4","8","8","4","8","8"], d:["s19","s17","s19","s17","s15","s17"], p2:["8","8","8","8","4","4"], d2:["s15","s13","s15","s13","s13","s9"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.90
+      { cat: "Coltrane Patterns iiV 2bar 90", p:["8","8","8","8","8","8","8","8"], d:["s9","s11","s12","s14","s15","s17","s13","s12"], p2:["4","z8","8","8","8","8","8"], d2:["s11","s10","s7","s9","s10","s13"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.90
+      { cat: "Coltrane Patterns iiV 2bar 91", p:["8","8","8","8","8","8","8","8"], d:["s19","s18","s17","s16","s15","s19","s12","s14"], p2:["8","8","8","8","z8","8","8","8"], d2:["s18","s21","s20","s18","s18","s16","s8"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.91
+      { cat: "Coltrane Patterns iiV 2bar 92", p:["z4","2","8","8"], d:["s19","s14","s17"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s13","s9","s6","s5","s4","s3","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.91
+      { cat: "Coltrane Patterns iiV 2bar 93", p:["8","8","8","8","8","8","8","8"], d:["s3","s6","s8","s9","s11","s13","s8","s11"], p2:["8","8","8","8","8","8","8","8"], d2:["s9","s7","s6","s9","s5","s4","s3","s5"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.92
+      { cat: "Coltrane Patterns iiV 2bar 94", p:["8","8","8","8","8","8","8","8"], d:["s15","s14","s11","s7","s12","s14","s15","s19"], p2:["8","8","8","8","8","8","z4"], d2:["s12","s14","s15","s17","s19","s21"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.93
+      { cat: "Coltrane Patterns iiV 2bar 95", p:["8","8","8","8","8","8","8","8"], d:["s9","s7","s6","s4","s3","s6","s1","s3"], p2:["8","8","8","8","4","z4"], d2:["s6","s8","s11","s8","s8"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.93
+      { cat: "Coltrane Patterns iiV 2bar 96", p:["4","8","8","8","8","8","8"], d:["s22","s21","s22","s21","s19","s17","s16"], p2:["8","8","8","8","8","8","8","8"], d2:["s15","s19","s12","s15","s14","s12","s10","s9"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.94
+      { cat: "Coltrane Patterns iiV 2bar 97", p:["4","8","8","8","8","8","8"], d:["s15","s10","s14","s12","s14","s15","s17"], p2:["8","8","8","8","4.","8"], d2:["s14","s12","s10","s7","s12","s10"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.96
+      { cat: "Coltrane Patterns iiV 2bar 98", p:["16","16","16","16","16","16","8","8","trip16","trip16","trip16","4"], d:["s15","s17","s19","s21","s22","s24","s26","s26","s24","s22","s19","s15"], p2:["z8","16","16","16","16","16","16","16","16","trip16","trip16","trip16","16","16","16","16"], d2:["s11","s13","s15","s18","s20","s21","s23","s25","s25","s24","s21","s20","s13","s17","s13"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.96
+      { cat: "Coltrane Patterns iiV 2bar 99", p:["16","16","16","16","16","16","8","8","trip16","trip16","trip16","4"], d:["s15","s17","s19","s21","s22","s24","s26","s26","s24","s22","s19","s15"], p2:["z8","16","16","16","16","16","16","16","16","trip16","trip16","trip16","16","16","16","16"], d2:["s11","s13","s15","s18","s20","s21","s23","s25","s25","s24","s21","s18","s13","s17","s13"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.96
+      { cat: "Coltrane Patterns iiV 2bar 100", p:["trip8","trip8","trip8","8","8","16","8","16","trip8","trip8","trip8"], d:["s12","s14","s15","s17","s18","s18","s17","s15","s17","s14","s12"], p2:["4","8","8","16","16","16","16","8","8"], d2:["s10","s10","s5","s14","s12","s11","s7","s8","s7"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.98
+      { cat: "Coltrane Patterns iiV 2bar 101", p:["8","8","8","8","8","8","8","8"], d:["s12","s4","s8","s12","s5","s7","s9","s13"], p2:["4","8","8","4.","8"], d2:["s3","s6","s5","s5","s3"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.100
+      { cat: "Coltrane Patterns iiV 2bar 102", p:["8","8","8","8","8","8","8","8"], d:["s10","s4","s8","s10","s5","s7","s9","s13"], p2:["4","8","8","4.","8"], d2:["s3","s6","s5","s5","s3"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.100
+      { cat: "Coltrane Patterns iiV 2bar 103", p:["8","8","8","8","8","8","8","8"], d:["s17","s15","s20","s18","s14","s12","s17","s15"], p2:["8","8","8","8","8","8","8","8"], d2:["s11","s9","s14","s12","s8","s6","s11","s9"], q:["min"], span2:true, authentic:true, w:COLTRANE_PAT_WEIGHT }, // 原本 p.102
+    ];
+
     // 2小節にまたがる ii-V（m7 1小節 → 4度上の7th 1小節）フレーズ。d2 は後半小節の音（基準は ii のルート）
     const IIV_2BAR_PHRASES = [
       { cat: "Parker Donna Lee iiV 2bar 1", p:["8","8","8","8","8","8","8","8"], d:["s17","s11","s12","s15","s19","s22","s26","s29"], p2:["8","8","8","8","8","8","8","8"], d2:["s27","s19","s22","s26","s25","s18","s17","s15"], q:["min"], span2:true, authentic:true, w:DONNA_WEIGHT }, // 原曲5-6小節（Bbm7→Eb7）
@@ -1234,10 +1640,162 @@
       // 12. バッハ「平均律 プレリュード BWV846」のアルペジオ
       ...PRELUDE_PHRASES,
       // 13. 2小節にまたがる ii-V（Donna Lee／Chromatic Fantasy）
-      ...IIV_2BAR_PHRASES
+      ...IIV_2BAR_PHRASES,
+      // 14. チャーリー・クリスチャン「Solo Flight」
+      ...CHRISTIAN_PHRASES,
+      // 15. 「John Coltrane Patterns」
+      ...COLTRANE_PATTERN_PHRASES,
+      ...COLTRANE_PATTERN_IIV_PHRASES
     ];
 
     // 16分系（16分・3連16分）を含むフレーズか
+    // ジャズの実フレーズ（Parker・Coltrane・Christian）から取ったリズム。音の数ごとにまとめる
+    // トライアドのフレーズに当てはめて、8分が並ぶだけの平坦なリズムを崩す
+    const JAZZ_RHYTHMS = (() => {
+      const BT = { "16": .25, "8": .5, "4": 1, "4.": 1.5, "2": 2, "2.": 3, "trip8": 1 / 3, "trip16": 1 / 6, z16: .25, z8: .5, z4: 1, z2: 2 };
+      const byN = {}, seen = new Set(), halves = { front: [], back: [] };
+      PHRASE_DICTIONARY.forEach(c => {
+        if (!c.authentic || c.span2 || !/Parker|Coltrane|Christian/.test(c.cat)) return;
+        if (c.p.some(t => BT[t] === undefined)) return;
+        const rest = c.p.filter(t => t.startsWith("z")).reduce((a, t) => a + BT[t], 0);
+        if (rest > 1.01) return;                                   // 休みが長すぎるものは使わない
+        const n = c.p.filter(t => !t.startsWith("z")).length;
+        if (c.p.every(t => t === "8")) return;                     // 8分が並ぶだけのものは意味がない
+        const key = c.p.join(","); if (seen.has(key)) return; seen.add(key);
+        (byN[n] = byN[n] || []).push({ p: c.p, from: c.cat });
+        // 2拍ずつの「リズムの型」にも分けておく（前半＋後半を組み合わせて、音の数に合うリズムを増やす）
+        let t = 0, cut = -1;
+        c.p.forEach((tk, i) => { t += BT[tk]; if (Math.abs(t - 2) < 1e-6) cut = i + 1; });
+        if (cut > 0) { halves.front.push({ p: c.p.slice(0, cut), from: c.cat }); halves.back.push({ p: c.p.slice(cut), from: c.cat }); }
+      });
+      const hk = new Set();
+      ["front", "back"].forEach(k => { halves[k] = halves[k].filter(h => { const key = k + h.p.join(","); if (hk.has(key)) return false; hk.add(key); return true; }); });
+      const plain = (h) => h.p.every(t => t === "8");
+      halves.front.forEach(f => halves.back.forEach(bk => {
+        if (plain(f) && plain(bk)) return;
+        const pp = [...f.p, ...bk.p], key = pp.join(",");
+        if (seen.has(key)) return; seen.add(key);
+        const rest = pp.filter(t => t.startsWith("z")).reduce((a, t) => a + BT[t], 0);
+        if (rest > 1.01 || pp[pp.length - 1].startsWith("z") && rest > 0.51) return;
+        const n = pp.filter(t => !t.startsWith("z")).length;
+        (byN[n] = byN[n] || []).push({ p: pp, from: f.from === bk.from ? f.from : f.from + " / " + bk.from });
+      }));
+      byN.halves = halves;     // 2拍ぶんのリズムの型（コードメロディのフィルでも使う）
+      return byN;
+    })();
+    const TRIAD_RHYTHM_PROB = 0.85;   // トライアドのフレーズにジャズのリズムを当てる割合
+
+    // ── Barry Harris モード（ギター版トレーナーから移植）：バリー・ハリスの6thディミニッシュ・スケール ──
+    // 8音スケール＝「6th（または7th）コード」＋「ディミニッシュ7th」。コードトーンから8分で動くと、表拍にコードトーンが来る
+    const MAJ6_DIM = [0, 2, 4, 5, 7, 8, 9, 11];   // 例 C: C D E F G Ab A B（C6 + Bdim7）
+    const MIN6_DIM = [0, 2, 3, 5, 7, 8, 9, 11];   // 例 C: C D Eb F G Ab A B（Cm6 + Bdim7）
+    const DOM7_DIM = [0, 2, 4, 5, 7, 8, 10, 11];  // 例 C: C D E F G Ab Bb B（C7 + Bdim7）
+    const bhScaleFor = (chord) => {
+      const t = String(chord.name || "").replace(/^[A-G][#b]?/, "").split("/")[0];
+      const sh = (arr, k) => arr.map(x => (x + k + 12) % 12);
+      if (chord.isDim && !t.includes("m7b5") && !t.includes("ø"))      // dim7：半音上のマイナー6thディミニッシュ（C#dim7 → Dm6）。拍頭はdimの音
+        return { pcs: sh(MIN6_DIM, 1), cts: [0, 3, 6, 9], name: "minor 6th dim（半音上）", shift: 1, kind: "m6 dim" };
+      if (t.includes("m7b5") || t.includes("ø"))                         // m7b5：短3度上のマイナー6th（Dm7b5 → Fm6）
+        return { pcs: sh(MIN6_DIM, 3), cts: [0, 3, 6, 10], name: "minor 6th dim（短3度上）", shift: 3, kind: "m6 dim" };
+      if (chord.isMinor && (t.includes("6") || /mM|m\(maj|mmaj/i.test(t)))
+        return { pcs: MIN6_DIM, cts: [0, 3, 7, 9], name: "minor 6th dim", shift: 0, kind: "m6 dim" };
+      if (chord.isMinor)                                                 // m7：短3度上のメジャー6th（Dm7 → F6）
+        return { pcs: sh(MAJ6_DIM, 3), cts: [0, 3, 7, 10], name: "6th dim（短3度上＝相対の6th）", shift: 3, kind: "6 dim" };
+      if (chord.isV7) return { pcs: DOM7_DIM, cts: [0, 4, 7, 10], name: "7th dim", shift: 0, kind: "7 dim" };
+      return { pcs: MAJ6_DIM, cts: [0, 4, 7, 9], name: "6th dim", shift: 0, kind: "6 dim" };
+    };
+    const bhLadder = (pcs) => { const out = []; for (let n = -24; n <= 36; n++) if (pcs.includes(((n % 12) + 12) % 12)) out.push(n); return out; };
+    const bhWalk = (ladder, start, steps) => { const i = ladder.indexOf(start); return ladder[i + steps]; };
+    const bhNextCT = (cts, v, dir) => { for (let k = 1; k <= 24; k++) { const c = v + dir * k; if (cts.includes(((c % 12) + 12) % 12)) return c; } return v; };
+    // 4音（半小節）または8音（1小節）のライン。dir=-1 下降, +1 上昇
+    const bhPatterns = (sc, ct, len) => {
+      const L = bhLadder(sc.pcs), out = [];
+      const run = (st, n, dir) => Array.from({ length: n }, (_, k) => bhWalk(L, st, dir * k));
+      if (len === 4) {
+        out.push({ k: "down", o: run(ct, 4, -1) });
+        out.push({ k: "up", o: run(ct, 4, 1) });
+        const c2 = bhNextCT(sc.cts, ct, 1), c3 = bhNextCT(sc.cts, c2, 1);
+        out.push({ k: "arp-down", o: [ct, c2, c3, bhWalk(L, c3, -1)] });
+        return out;
+      }
+      out.push({ k: "down8", o: run(ct, 8, -1) });
+      out.push({ k: "up8", o: run(ct, 8, 1) });
+      // アルペジオで上がって、スケールで下りる（バリー・ハリスの基本形）
+      const a2 = bhNextCT(sc.cts, ct, 1), a3 = bhNextCT(sc.cts, a2, 1);
+      out.push({ k: "arp-up/scale-down", o: [ct, a2, ...run(a3, 6, -1)] });
+      // スケールで下りて、アルペジオで上がる
+      const d5 = run(ct, 5, -1), last = d5[4];
+      const u1 = bhNextCT(sc.cts, last, 1), u2 = bhNextCT(sc.cts, u1, 1), u3 = bhNextCT(sc.cts, u2, 1);
+      out.push({ k: "scale-down/arp-up", o: [...d5, u1, u2, u3] });
+      // 裏拍から入る：dimの音から始めて下降（表拍にコードトーン）
+      out.push({ k: "pickup", rest: true, o: run(bhWalk(L, ct, 1), 7, -1) });
+      return out;
+    };
+    const PC_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+    const bhHint = (chord, sc) => PC_NAMES[(chord.rootPc + sc.shift) % 12] + sc.kind.replace(/^m6/, "m6").replace(/^6/, "6").replace(/^7/, "7");
+    // 8分×8のスロットに「休符・伸ばし」を入れるリズム型。n=音 h=前の音を伸ばす r=休符
+    // 表拍（偶数スロット）の音は消すか伸ばすだけなので、「表拍にコードトーン」のルールは崩れない
+    const REST_MASKS = [
+      "nnnnnnhr", "nnnnnhrr", "nhnnnnnh", "rrnnnnnn", "nnrnnnnn", "nnnnrnnn",
+      "nhrnnnnn", "nnnhrnnn", "nnnnnhnh", "rnnnnnhr", "nnnnnnrr", "nhnhnnnn"
+    ];
+    const applyMask = (offs, mask) => {
+      const p = [], d = [];
+      const DUR = { 1: "8", 2: "4", 3: "4.", 4: "2", 5: "2.5", 6: "2." };
+      const REST = { 1: ["z8"], 2: ["z4"], 3: ["z4", "z8"], 4: ["z2"] };
+      for (let i = 0; i < 8; ) {
+        if (mask[i] === "r") { let j = i; while (j < 8 && mask[j] === "r") j++; p.push(...REST[j - i]); i = j; continue; }
+        let j = i + 1; while (j < 8 && mask[j] === "h") j++;
+        p.push(DUR[j - i]); d.push("s" + offs[i]); i = j;
+      }
+      return { p, d };
+    };
+
+    const makeBarryHarrisCells = (chord1, chord2, twoChords, useRests = true) => {
+      const sc1 = bhScaleFor(chord1);
+      const cells = [];
+      const startCTs = [...sc1.cts, ...sc1.cts.map(c => c + 12)];
+      const hint1 = bhHint(chord1, sc1);
+      if (!twoChords) {
+        startCTs.forEach(ct => bhPatterns(sc1, ct, 8).forEach(pt => {
+          if (pt.o.some(v => v === undefined)) return;
+          const p = pt.rest ? ["z8", "8", "8", "8", "8", "8", "8", "8"] : ["8", "8", "8", "8", "8", "8", "8", "8"];
+          cells.push({ cat: `BarryHarris ${sc1.name} ${pt.k}`, p, d: pt.o.map(v => "s" + v), authentic: true, bh: true, hint: hint1 });
+          if (pt.rest) return;
+          // 休符・伸ばしを入れた形（ランダムに3つ）
+          if (useRests) {
+            [...REST_MASKS].sort(() => Math.random() - 0.5).slice(0, 2).forEach(mask => {
+              const r = applyMask(pt.o, mask);
+              cells.push({ cat: `BarryHarris ${sc1.name} ${pt.k} ${mask}`, p: r.p, d: r.d, authentic: true, bh: true, hint: hint1 });
+            });
+          }
+        }));
+        return cells;
+      }
+      // 1小節2コード：前半は chord1 のスケール、後半は chord2 のスケールで、同じ向きに続ける
+      const sc2 = bhScaleFor(chord2);
+      const diff = ((chord1.rootPc - chord2.rootPc) + 12) % 12;   // root1基準のオフセット → root2基準へ
+      startCTs.forEach(ct => bhPatterns(sc1, ct, 4).forEach(pt => {
+        if (pt.o.some(v => v === undefined)) return;
+        const lastIn2 = pt.o[3] + diff;
+        const dir = pt.k === "up" ? 1 : -1;
+        const ct2 = bhNextCT(sc2.cts, lastIn2, dir);               // 次のコードのコードトーンへ半音・全音で着地
+        const L2 = bhLadder(sc2.pcs);
+        const half2 = Array.from({ length: 4 }, (_, k) => bhWalk(L2, ct2, dir * k));
+        if (half2.some(v => v === undefined)) return;
+        const offs = [...pt.o, ...half2];
+        const hint = `${hint1} | ${bhHint(chord2, sc2)}`;
+        cells.push({ cat: `BarryHarris ${sc1.name}→${sc2.name} ${pt.k}`, p: ["8", "8", "8", "8", "8", "8", "8", "8"],
+          d: offs.map(v => "s" + v), authentic: true, bh: true, hint });
+        // 2コードの小節は、各コードの頭（表拍）を残す形だけ使う
+        if (useRests) ["nnnhnnnh", "nnnrnnnn", "nhnnnnnr"].forEach(mask => {
+          const r = applyMask(offs, mask);
+          cells.push({ cat: `BarryHarris ${sc1.name}→${sc2.name} ${pt.k} ${mask}`, p: r.p, d: r.d, authentic: true, bh: true, hint });
+        });
+      }));
+      return cells;
+    };
+
     const hasSixteenth = (cell) => [...cell.p, ...(cell.p2 || [])].some(x => x === "16" || x === "trip16");
 
     // 音価の解決（完コピ譜面・アドリブ生成の両方で共通利用）
@@ -1531,94 +2089,505 @@
     };
 
     // 4弦ベース専用SVG TAB譜コンポーネント
-    const FourStringBassTab = ({ measures, perLine = 4 }) => {
+    // ══ ベースのコードメロディ ══════════════════════════════════
+    // テーマのメロディ（実音MIDI）とコード進行から、メロディを一番上に保ったベース用コードメロディを作る
+    // CM1 ルート＋メロディ ／ CM2 シェル（ルート＋3度か7度） ／ CM3 ダブルストップ（表拍はハモりの音を1つ下に）
+    const CM_MODES = [
+      { id: "CM1", label: "CM1 ルート＋メロディ", cm: 1, desc: "コードメロディ：コードが変わるところだけ、ルート音を一緒に弾く" },
+      { id: "CM2", label: "CM2 シェル", cm: 2, desc: "コードメロディ：コードの頭はルート＋ガイドトーン（3度か7度）＋メロディ、強拍の長い音はガイドトーンを1つ下に足す" },
+      { id: "CM3", label: "CM3 ダブルストップ", cm: 3, desc: "コードメロディ：CM2に加えて、表拍の音はほぼ全部ハモりの音（3度・6度・10度）を下に足す" }
+    ];
+    const CM_DUR_NAME = { 0.25: "16", 0.5: "8", 1: "4", 1.5: "4.", 2: "2", 3: "2.", 3.5: "2..", 4: "1" };
+    const CM_BEATS = { "16": .25, "8": .5, "4": 1, "4.": 1.5, "2": 2, "2.": 3, "2..": 3.5, "1": 4, z16: .25, z8: .5, z4: 1, z2: 2, z1: 4 };
+    const cmPcRel = (m, r) => ((m - r) % 12 + 12) % 12;
+    const cmChordAt = (chordStr, beat) => { const parts = String(chordStr || "").split(/\s+/).filter(Boolean); return parts.length === 2 && beat >= 2 ? parts[1] : parts[0]; };
+    const cmTones = (name) => {
+      const q = chordQuality(name);
+      const third = (q === "min" || q === "hdim" || q === "dim") ? 3 : 4;
+      const fifth = (q === "hdim" || q === "dim") ? 6 : 7;
+      const sev = q === "maj" ? 11 : (q === "dim" ? 9 : 10);
+      return { third, fifth, sev, all: [0, third, fifth, sev] };
+    };
+
+    // 音の組（高い順）を弦に割り当てる候補 [{ tab:[[弦,フレット]...], cost, center }]
+    const cmBassFingerings = (notes) => {
+      const res = [];
+      const rec = (i, maxS, acc) => {
+        if (i === notes.length) {
+          const fr = acc.map(x => x[1]).filter(f => f > 0);
+          const lo = fr.length ? Math.min(...fr) : 0, hi = fr.length ? Math.max(...fr) : 0;
+          if (hi - lo > 5) return;
+          let cost = (hi - lo) * 0.6 + (hi - lo === 5 ? 2 : 0) + Math.max(0, hi - 12) * 0.25 + Math.max(0, hi - 17) * 1.2;
+          for (let k = 1; k < acc.length; k++) cost += (acc[k - 1][0] - acc[k][0] - 1) * 0.7;   // 間の弦をミュートする手間
+          if (notes.length > 1 && acc[0][0] < 2) cost += 2.5;                                   // 和音のときメロディはD弦かG弦で
+          res.push({ tab: acc.slice(), cost, center: fr.length ? (lo + hi) / 2 : null, opens: acc.filter(x => x[1] === 0).length });
+          return;
+        }
+        for (let s = maxS; s >= 0; s--) {
+          const f = notes[i] - BASS_STRINGS[s];
+          if (f < 0 || f > 20) continue;
+          acc.push([s, f]); rec(i + 1, s - 1, acc); acc.pop();
+        }
+      };
+      rec(0, 3, []);
+      return res.sort((a, b) => a.cost - b.cost).slice(0, 6);
+    };
+
+    // メロディ音 m の下に置く音の候補（高い順、メロディは含まない）
+    const cmBassVoicings = (m, chordName, kind) => {
+      const ch = parseChord(chordName), r = ch.rootPc, T = cmTones(chordName), rel = cmPcRel(m, r);
+      const roots = []; for (let b = MIN_BASS_MIDI; b <= m - 3; b++) if (cmPcRel(b, r) === 0) roots.push(b);
+      const guides = [T.third, T.sev].filter(g => g !== rel);
+      const below = (pcs, lo, hi) => { const out = []; for (let v = m - lo; v >= m - hi; v--) if (v >= MIN_BASS_MIDI && pcs.includes(cmPcRel(v, r))) out.push(v); return out; };
+      const out = [];
+      if (kind === "root" || kind === "shell") {
+        roots.forEach(b => out.push({ notes: [b], cost: (m - b < 7 ? 2.5 : 0) + (m - b > 24 ? 1.5 : 0), style: "root" }));
+      }
+      if (kind === "shell") {
+        roots.forEach(b => guides.forEach(g => below([g], 2, 22).forEach(v => {
+          if (v > b + 2) out.push({ notes: [v, b], cost: -1.5 + (m - v < 3 ? 1 : 0) + (m - b > 26 ? 1.5 : 0), style: "shell" });
+        })));
+      }
+      if (kind === "dbl" || kind === "guide") {
+        below(guides, 3, 10).forEach(v => out.push({ notes: [v], cost: -1, style: "guide" }));
+        if (kind === "dbl") below(T.all.filter(x => x !== rel), 3, 9).forEach(v => { if (!out.some(o => o.notes[0] === v)) out.push({ notes: [v], cost: 0, style: "dbl" }); });
+        out.push({ notes: [], cost: 3, style: null });   // ハモりを足せないとき
+      }
+      if (!out.length) out.push({ notes: [], cost: 0, style: null });
+      return out;
+    };
+
+    // 再生成のたびに少しずつ違うフィルになるよう、種（seed）付きの乱数を使う
+    const cmRand = (seed) => { let a = (seed * 2654435761) >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+
+    // メロディが伸びている所・休符を埋めるフィル（ベースの低い音域）。戻り値 [{ dur, notes:[高い順] }]
+    //  walk：4分のウォーキング（最後は次のコードのルートへ半音でアプローチ）
+    //  arp ：8分のアルペジオ（上がる／下がる、最後はアプローチ）
+    //  chord：ルート＋7度→ルート＋10度などの和音を刻む（内声が動く）
+    const cmMakeFill = (type, startAbs, len, chordName, nextChordName, rnd) => {
+      const ch = parseChord(chordName), r = ch.rootPc, T = cmTones(chordName);
+      const lowRoot = (pc) => { let b = MIN_BASS_MIDI; while (cmPcRel(b, pc) !== 0) b++; return b; };   // 28〜39
+      const R0 = lowRoot(r) + (lowRoot(r) < 31 && rnd() < 0.5 ? 12 : 0);
+      // 拍の区切り
+      const slots = []; let t = startAbs; const end = startAbs + len;
+      const unit = type === "arp" ? 0.5 : 1;
+      while (t < end - 1e-6) {
+        let d = unit; if (Math.abs(t - Math.round(t)) > 1e-6 && unit === 1) d = Math.round(t + 0.5) - t;  // 裏拍から始まるとき
+        d = Math.min(d, end - t); slots.push({ abs: t, dur: d }); t += d;
+      }
+      const n = slots.length; if (!n) return [];
+      const approach = (prev) => {
+        if (!nextChordName) return null;
+        const nr = parseChord(nextChordName).rootPc;
+        let tgt = lowRoot(nr); while (tgt + 12 <= prev + 7) tgt += 12;
+        if (Math.abs(tgt - 12 - prev) < Math.abs(tgt - prev) && tgt - 12 >= MIN_BASS_MIDI + 1) tgt -= 12;
+        let fromBelow = tgt - 1 >= MIN_BASS_MIDI && (rnd() < 0.6 || tgt + 1 > 47);
+        if ((fromBelow ? tgt - 1 : tgt + 1) === prev) fromBelow = !fromBelow;   // 直前と同じ音にならないように
+        if (!fromBelow && tgt + 1 === prev) return tgt - 1 >= MIN_BASS_MIDI ? tgt - 1 : tgt + 1;
+        return fromBelow ? tgt - 1 : tgt + 1;
+      };
+      const changes = nextChordName && nextChordName !== chordName;
+      const apText = changes ? `→ ${nextChordName}へ半音でアプローチ` : "";
+      const out = [];
+      // トライアドのフレーズの一部を、ジャズの実フレーズのリズム（2拍ぶんの型）で弾く
+      const onGrid = Math.abs(startAbs - Math.round(startAbs)) < 1e-6;
+      if (type === "triad" && !(onGrid && (Math.abs(len - 2) < 1e-6 || Math.abs(len - 1) < 1e-6))) type = "arp";
+      if (type === "triad") {
+        const q = chordQuality(chordName);
+        const cells = PHRASE_DICTIONARY.filter(c => (c.cat.includes("Triad") || c.cat.includes("Drop")) && !c.isHarm && !c.span2 && (!c.q || c.q.includes(q)) && c.d.length >= 4);
+        const cell = cells[Math.floor(rnd() * cells.length)];
+        const BT = { "16": .25, "8": .5, "4": 1, "4.": 1.5, "trip8": 1 / 3, "trip16": 1 / 6, z16: .25, z8: .5, z4: 1 };
+        let rhythms;
+        if (len > 1.5) rhythms = ((JAZZ_RHYTHMS.halves && JAZZ_RHYTHMS.halves.back) || []).map(h => h.p)
+          .filter(p => p.every(t => BT[t] !== undefined) && p.filter(t => !t.startsWith("z")).length <= cell.d.length && p.filter(t => !t.startsWith("z")).length >= 2 && !p.every(t => t === "8"));
+        else rhythms = [["8", "8"], ["trip8", "trip8", "trip8"], ["16", "16", "8"], ["z8", "8"], ["8", "16", "16"]];
+        if (!rhythms.length) rhythms = [["8", "8", "8", "8"]];
+        const rp = rhythms[Math.floor(rnd() * rhythms.length)];
+        const k = rp.filter(t => !t.startsWith("z")).length;
+        const degs = getChordDegrees(ch);
+        const off0 = Math.floor(rnd() * (cell.d.length - k + 1));
+        const offs = cell.d.slice(off0, off0 + k).map(x => degs[x] !== undefined ? degs[x] : 0);
+        let base = lowRoot(r); while (base + Math.min(...offs) < MIN_BASS_MIDI) base += 12;
+        while (base + Math.max(...offs) > 52 && base - 12 + Math.min(...offs) >= MIN_BASS_MIDI) base -= 12;
+        let t0 = startAbs, j = 0, prev = null;
+        rp.forEach((tk, ti) => {
+          const d = BT[tk];
+          if (tk.startsWith("z")) { out.push({ abs: t0, dur: d, notes: null }); t0 += d; return; }
+          let m = base + offs[j++];
+          if (j === k && changes && k > 1) { const a = approach(prev); if (a !== null) m = a; }
+          out.push({ abs: t0, dur: d, notes: [m] }); prev = m; t0 += d;
+        });
+        out.style = `フィル：トライアド「${cell.cat}」の${k}音を、ジャズのリズムで ${apText}`;
+        return out;
+      }
+      if (type === "chord") {
+        const ups = [[T.sev, T.third + 12], [T.third + 12, T.sev], [T.sev, T.fifth + 12]][Math.floor(rnd() * 3)];
+        for (let k = 0; k < n; k++) {
+          if (k === n - 1 && changes && n > 1 && rnd() < 0.6) { out.push({ ...slots[k], notes: [approach(R0)] }); break; }
+          const up = ups[k % ups.length];
+          out.push({ ...slots[k], notes: [R0 + up, R0] });
+        }
+        out.style = `フィル：和音の刻み（ルート＋7度・10度。上の声が動く） ${apText}`;
+        return out;
+      }
+      let seq;
+      const tones = [0, T.third, T.fifth, T.sev];
+      if (type === "arp" && rnd() < 0.45) {        // 上から下りる
+        const top = R0 + 12 + T.third;
+        seq = []; let x = top;
+        for (let k = 0; k < n; k++) { seq.push(x); x--; while (!tones.includes(cmPcRel(x, r))) x--; if (x < MIN_BASS_MIDI) x += 12; }
+      } else {
+        // ウォーキングは、いま弾いたルートと同じ音を避けて5度から始める
+        const pat = type === "arp" ? [0, T.third, T.fifth, T.sev, 12, T.sev, T.fifth, T.third] : [T.fifth, 12, T.third + 12, T.fifth];
+        seq = []; for (let k = 0; k < n; k++) seq.push(R0 + pat[k % pat.length]);
+      }
+      for (let k = 0; k < n; k++) {
+        let m = seq[k];
+        if (k === n - 1 && changes) { const a = approach(k > 0 ? seq[k - 1] : R0 + T.fifth); if (a !== null) m = a; }
+        out.push({ ...slots[k], notes: [m] });
+      }
+      out.style = type === "arp" ? `フィル：8分のアルペジオ（コードトーン） ${apText}` : `フィル：4分のウォーキング（5度から） ${apText}`;
+      return out;
+    };
+
+    const arrangeBassChordMelody = (melodyBars, chordList, level, seed = 1) => {
+      const rnd = cmRand(seed + level * 101);
+      const nBars = melodyBars.length;
+      const chordAtAbs = (abs) => { const bi = Math.min(nBars - 1, Math.floor(abs / 4 + 1e-9)); return cmChordAt(chordList[bi], abs - bi * 4); };
+      // 0) 音域：メロディをオクターブ単位で下げて、ローポジション〜12F（D弦・G弦が中心）で弾ける高さに置く。
+      //    ほとんどの音が55（G弦12F）以下に入る高さを選び、はみ出す数音だけ1オクターブ下げる
+      const CM_TOP = 55;
+      const allM = melodyBars.flat().filter(e => !String(e[0]).startsWith("z")).map(e => e[1]);
+      let shift = 0;
+      while (allM.filter(m => m + shift > CM_TOP).length > Math.max(1, allM.length * 0.03)) shift -= 12;
+      const fold = (m) => (m + shift > CM_TOP ? m + shift - 12 : m + shift);
+      // 1) メロディを曲全体の時間軸の出来事にする（タイはまとめ、コードの変わり目では弾き直す）
+      let items = [];
+      melodyBars.forEach((bar, bi) => {
+        let beat = 0;
+        bar.forEach(ev => {
+          const dur = CM_BEATS[ev[0]], rest = String(ev[0]).startsWith("z");
+          const abs = bi * 4 + beat, tieOut = String(ev[2] || "").includes("-");
+          const last = items[items.length - 1];
+          if (!rest && last && last.tieOut && !last.rest && last.midi === fold(ev[1]) && Math.abs(last.abs + last.dur - abs) < 1e-6) { last.dur += dur; last.tieOut = tieOut; }
+          else items.push({ abs, dur, rest, midi: rest ? null : fold(ev[1]), tieOut });
+          beat += dur;
+        });
+      });
+      // コードの変わり目（小節頭・2コードの小節の3拍目）をまたぐ音は分けて弾き直す
+      const cuts = []; for (let bi = 0; bi < nBars; bi++) { cuts.push(bi * 4); if (String(chordList[bi] || "").split(/\s+/).filter(Boolean).length === 2) cuts.push(bi * 4 + 2); }
+      const split = [];
+      items.forEach(it => {
+        let s = it.abs; const e = it.abs + it.dur;
+        cuts.filter(c => c > s + 1e-6 && c < e - 1e-6 && chordAtAbs(c) !== chordAtAbs(c - 0.01)).forEach(c => { split.push({ ...it, abs: s, dur: c - s }); s = c; });
+        split.push({ ...it, abs: s, dur: e - s });
+      });
+      items = split.map(it => ({ abs: it.abs, dur: it.dur, rest: it.rest, midi: it.midi, chord: chordAtAbs(it.abs) }));
+      // 2) フィル：メロディが2拍以上伸びている所は後ろ半分を、1拍以上の休符はまるごと、ベースのフィルで埋める
+      const nextAttack = (i) => { for (let k = i + 1; k < items.length; k++) if (!items[k].rest) return items[k]; return items.find(x => !x.rest); };
+      const filled = []; let fillNo = 0;
+      items.forEach((it, i) => {
+        const nx = nextAttack(i), nxChord = nx ? nx.chord : null;
+        const pickType = () => { const x = rnd();
+          if (level === 1) return x < 0.55 ? "walk" : "triad";
+          if (level === 2) return x < 0.35 ? "arp" : x < 0.6 ? "walk" : "triad";
+          return x < 0.35 ? "chord" : x < 0.6 ? "arp" : "triad"; };
+        const pushFill = (fl) => { const g = "f" + (fillNo++);
+          fl.forEach(f => filled.push(f.notes ? { abs: f.abs, dur: f.dur, rest: false, midi: f.notes[0], fixedNotes: f.notes, chord: chordAtAbs(f.abs), fill: true, info: { group: g, style: fl.style } }
+                                              : { abs: f.abs, dur: f.dur, rest: true, midi: null, chord: chordAtAbs(f.abs) })); };
+        if (!it.rest && it.dur >= 2 - 1e-6) {
+          const fl = it.dur >= 3 - 1e-6 ? 2 : 1;
+          filled.push({ ...it, dur: it.dur - fl });
+          pushFill(cmMakeFill(pickType(), it.abs + it.dur - fl, fl, it.chord, nxChord, rnd));
+        } else if (it.rest && it.dur >= 1 - 1e-6) {
+          pushFill(cmMakeFill(pickType(), it.abs, it.dur, it.chord, nxChord, rnd));
+        } else filled.push(it);
+      });
+      items = filled;
+      let prevChord = null;
+      items.forEach(it => { it.chordChange = !it.rest && it.chord !== prevChord; if (!it.rest) prevChord = it.chord; });
+      // 3) 和音の種類（メロディの音だけ。フィルは決まった音）
+      items.forEach(e => {
+        if (e.rest || e.fill) { e.kind = "none"; return; }
+        const beat = e.abs % 4;
+        const onBeat = Math.abs(beat - Math.round(beat)) < .01;
+        const strong = onBeat && Math.round(beat) % 2 === 0;
+        if (e.chordChange) e.kind = level === 1 ? "root" : "shell";
+        else if (level === 2) e.kind = (strong && e.dur >= 1) ? "guide" : "none";
+        else if (level >= 3) e.kind = onBeat ? "dbl" : "none";
+        else e.kind = "none";
+      });
+      // 4) 候補（音の組×運指）を出して、手の移動が少なくなる並びを選ぶ（ビタビ）
+      const play = items.filter(e => !e.rest);
+      const opts = play.map(e => {
+        const list = [];
+        if (e.fixedNotes) {
+          cmBassFingerings(e.fixedNotes).forEach(fg => list.push({ notes: e.fixedNotes, tab: fg.tab, center: fg.center, opens: fg.opens, cost: fg.cost }));
+          if (list.length) return list;
+          return cmBassFingerings([e.fixedNotes[e.fixedNotes.length - 1]]).map(fg => ({ notes: [e.fixedNotes[e.fixedNotes.length - 1]], tab: fg.tab, center: fg.center, opens: fg.opens, cost: fg.cost + 3 }));
+        }
+        cmBassVoicings(e.midi, e.chord, e.kind).forEach(v => {
+          cmBassFingerings([e.midi, ...v.notes]).forEach(fg => list.push({ notes: [e.midi, ...v.notes], tab: fg.tab, center: fg.center, opens: fg.opens, cost: fg.cost + v.cost, style: v.style }));
+        });
+        if (!list.length) cmBassFingerings([e.midi]).forEach(fg => list.push({ notes: [e.midi], tab: fg.tab, center: fg.center, opens: fg.opens, cost: fg.cost + 4 }));
+        return list;
+      });
+      const dp = opts.map(l => l.map(() => ({ c: Infinity, from: -1, ctr: null })));
+      opts.forEach((list, i) => list.forEach((o, k) => {
+        if (i === 0) { dp[i][k] = { c: o.cost + Math.abs((o.center ?? 5) - 5) * 0.2 + (o.opens || 0) * 0.5, from: -1, ctr: o.center ?? 5 }; return; }
+        opts[i - 1].forEach((po, pk) => {
+          const pc = dp[i - 1][pk].ctr, cc = o.center ?? pc, d = Math.abs(cc - pc);
+          // 開放弦は、手がローポジションにいるとき以外は避ける（ポジション内で押さえた方が弾きやすい）
+          const c = dp[i - 1][pk].c + o.cost + d * 0.35 + (d > 4 ? 2 + (d - 4) * 0.5 : 0) + (o.opens || 0) * (0.3 + Math.max(0, pc - 3) * 0.55);
+          if (c < dp[i][k].c) dp[i][k] = { c, from: pk, ctr: cc };
+        });
+      }));
+      if (play.length) {
+        let k = 0; dp[play.length - 1].forEach((x, j) => { if (x.c < dp[play.length - 1][k].c) k = j; });
+        for (let i = play.length - 1; i >= 0; i--) { play[i].choice = opts[i][k]; k = dp[i][k].from; }
+      }
+      // 4b) 和音の意図（ギター版の「和音の説明」と同じ形）
+      const ivName = (d) => ({ 3: "3度", 4: "3度", 5: "4度", 6: "増4度", 7: "5度", 8: "6度", 9: "6度", 10: "7度", 11: "7度", 12: "オクターブ", 15: "10度", 16: "10度", 17: "11度" })[d] || (d + "半音");
+      let chordNo = 0;
+      play.forEach(e => {
+        if (e.fill || !e.choice || e.choice.notes.length < 2) return;
+        const c = e.choice, chd = parseChord(e.chord), T = cmTones(e.chord);
+        const lower = c.notes.slice(1), relOf = (m) => cmPcRel(m, chd.rootPc);
+        const gName = (m) => relOf(m) === T.third ? "3度" : relOf(m) === T.sev ? "7度" : getDegreeLabelFromMidi(m, chd);
+        let style;
+        if (c.style === "root") style = "ルート＋メロディ（コードが変わる所）";
+        else if (c.style === "shell") style = `シェル：ルート＋${gName(lower[0])}＋メロディ（コードが変わる所）`;
+        else if (c.style === "guide") style = `ガイドトーン（${gName(lower[0])}）をメロディの${ivName(e.midi - lower[0])}下に`;
+        else if (c.style === "dbl") style = `ハモり：メロディの${ivName(e.midi - lower[0])}下に${getDegreeLabelFromMidi(lower[0], chd)}`;
+        else style = "和音";
+        e.info = { group: "c" + (chordNo++), style };
+      });
+
+      // 5) 小節線・書ける音価で区切って、完コピと同じ形（[音価, 高音部MIDI(+24) か 和音配列, "-"], 原譜TAB）にする
+      const bars = melodyBars.map(() => []), tabs = melodyBars.map(() => []), infos = melodyBars.map(() => []);
+      const LENS = [4, 3.5, 3, 2, 1.5, 1, 0.5, 0.25];
+      items.forEach(it => {
+        let s = it.abs; const e = it.abs + it.dur; const segs = [];
+        const tripTok = Math.abs(it.dur - 1 / 3) < 1e-6 ? "trip8" : (Math.abs(it.dur - 1 / 6) < 1e-6 ? "trip16" : null);
+        if (tripTok) segs.push({ bi: Math.floor(s / 4 + 1e-6), d: it.dur, tok: tripTok });   // 3連はそのまま
+        while (!tripTok && s < e - 1e-6) {
+          const bi = Math.floor(s / 4 + 1e-9), inBar = bi * 4 + 4 - s;
+          const d = LENS.find(x => x <= Math.min(inBar, e - s) + 1e-6) || 0.25;
+          segs.push({ bi, d }); s += d;
+        }
+        segs.forEach((sg, k) => {
+          if (sg.bi >= nBars) return;
+          const tok = sg.tok || CM_DUR_NAME[sg.d] || "8";
+          if (it.rest) { bars[sg.bi].push(["z" + tok, 0]); tabs[sg.bi].push(null); infos[sg.bi].push(null); return; }
+          const ns = it.choice ? it.choice.notes : [it.midi];
+          bars[sg.bi].push([tok, ns.length > 1 ? ns.map(x => x + 24) : ns[0] + 24, k < segs.length - 1 ? "-" : ""]);
+          tabs[sg.bi].push(it.choice ? it.choice.tab.map(([st, f]) => [st, f]) : null);
+          infos[sg.bi].push(k === 0 ? (it.info || null) : null);
+        });
+      });
+      return { bars, tabs, infos, shift };
+    };
+
+    // 4弦ベース用 SVG TAB譜（TAB主役：コード名・ポジション・リズム・休符・度数・再生位置をTAB上に表示）
+    const REST_SHAPES = {
+      // 休符の簡易図形（y基準: リズム欄の中央）
+      quarter: (x, y) => <path d={`M${x-2},${y-9} L${x+3},${y-4} L${x-1},${y} L${x+3},${y+5} Q${x-3},${y+3} ${x},${y+9}`} fill="none" stroke="#475569" strokeWidth="1.6" />,
+      eighth: (x, y) => <g><circle cx={x-2} cy={y-3} r="1.8" fill="#475569" /><path d={`M${x-2},${y-2} Q${x+1},${y-1} ${x+3},${y-4} L${x-1},${y+7}`} fill="none" stroke="#475569" strokeWidth="1.4" /></g>,
+      sixteenth: (x, y) => <g><circle cx={x-2} cy={y-5} r="1.6" fill="#475569" /><circle cx={x-3} cy={y} r="1.6" fill="#475569" /><path d={`M${x+3},${y-6} L${x-2},${y+8}`} fill="none" stroke="#475569" strokeWidth="1.4" /></g>,
+      half: (x, y) => <rect x={x-5} y={y-3} width="10" height="4" fill="#475569" />,
+      whole: (x, y) => <rect x={x-5} y={y-1} width="10" height="4" fill="#475569" />
+    };
+
+    const CIRCLED = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
+    const BassTab = ({ measures, perLine = 4, startMeasure = 0, curBeat = -1, hideFrets = false, showDegrees = true, showChordInfo = false }) => {
+      // 和音の説明：小節ごとに、同じグループ（続けて動かす和音など）をまとめて番号を振る
+      const marks = {};
+      const legends = measures.map((m, mIdx) => {
+        const groups = [], map = {};
+        (m.notes || []).filter(n => n.isMain && n.chordDesc).sort((a, b) => a.beatPos - b.beatPos).forEach(n => {
+          const g = n.chordDesc.group;
+          if (!(g in map)) { map[g] = groups.length; groups.push({ style: n.chordDesc.style, runName: n.chordDesc.runName, degs: [] }); marks[mIdx + ":" + n.beatPos.toFixed(3)] = map[g]; }
+          groups[map[g]].degs.push(n.chordDesc.degs);
+        });
+        return groups;
+      });
       const stringLabels = ["G", "D", "A", "E"];
+      const L = 42, R = 1142, TOP = 40, GAP = 19;
+      const BOTTOM = TOP + GAP * 3;           // 4弦の線
+      const STEM_TOP = BOTTOM + 7, BEAM_Y = BOTTOM + 27, BEAM2_Y = BEAM_Y - 5, BEAM3_Y = BEAM_Y - 10;
+      const REST_Y = BOTTOM + 18;
+      const DEG_Y = BEAM_Y + 22;
+      const H = DEG_Y + 8;
+      const measureWidth = (R - L) / perLine;
+      const xOf = (mStart, beat) => mStart + 22 + (beat / 4.0) * (measureWidth - 34);
+      const near = (a, b) => Math.abs(a - b) < 0.02;
+
       return (
-        <div className="w-full mt-2 mb-6">
-          <svg viewBox="0 0 1150 82" className="w-full h-auto select-none">
-            <text x="12" y="25" fill="#0f172a" fontSize="13" fontWeight="800" fontFamily="sans-serif">T</text>
-            <text x="12" y="42" fill="#0f172a" fontSize="13" fontWeight="800" fontFamily="sans-serif">A</text>
-            <text x="12" y="59" fill="#0f172a" fontSize="13" fontWeight="800" fontFamily="sans-serif">B</text>
-
+        <div className="w-full mt-1 mb-4">
+          <svg viewBox={`0 0 1150 ${H}`} className="w-full h-auto select-none">
+            {["T", "A", "B"].map((c, i) => (
+              <text key={c} x="12" y={TOP + 14 + i * 17} fill="#0f172a" fontSize="14" fontWeight="800" fontFamily="sans-serif">{c}</text>
+            ))}
             {stringLabels.map((lbl, idx) => (
-              <text key={idx} x="30" y={19 + idx * 14} fill="#475569" fontSize="10" fontWeight="700" fontFamily="monospace">
-                {lbl}
-              </text>
+              <text key={idx} x="30" y={TOP + 4 + idx * GAP} fill="#64748b" fontSize="10" fontWeight="700" fontFamily="monospace">{lbl}</text>
             ))}
-
-            {[0, 1, 2, 3].map((lineIdx) => (
-              <line
-                key={lineIdx}
-                x1="42"
-                y1={15 + lineIdx * 14}
-                x2="1142"
-                y2={15 + lineIdx * 14}
-                stroke="#475569"
-                strokeWidth="1.2"
-              />
+            {[0, 1, 2, 3].map((i) => (
+              <line key={i} x1={L} y1={TOP + i * GAP} x2={R} y2={TOP + i * GAP} stroke="#64748b" strokeWidth="1.1" />
             ))}
-
-            <line x1="42" y1="15" x2="42" y2="57" stroke="#0f172a" strokeWidth="2" />
+            <line x1={L} y1={TOP} x2={L} y2={BOTTOM} stroke="#0f172a" strokeWidth="2" />
 
             {measures.map((m, mIdx) => {
-              const measureWidth = 1100 / perLine;
-              const measureStartX = 42 + mIdx * measureWidth;
+              const mStart = L + mIdx * measureWidth;
+              const gIdx = startMeasure + mIdx;
+              const local = curBeat - gIdx * 4;
+              const isCur = curBeat >= 0 && local >= 0 && local < 4;
+              const mains = (m.notes || []).filter(n => n.isMain).sort((a, b) => a.beatPos - b.beatPos);
+              let activeBeat = null;
+              if (isCur) mains.forEach(n => { if (n.beatPos <= local + 0.02) activeBeat = n.beatPos; });
+              if (isCur && m.tieTails) m.tieTails.forEach(n => { if (n.beatPos <= local + 0.02 && (activeBeat === null || n.beatPos > activeBeat)) activeBeat = n.beatPos; });
+
+              // リズム表示用：音符（和音は1つ）＋タイの後ろ側
+              const rhythm = [...mains.map(n => ({ beatPos: n.beatPos, dur: n.dur })), ...((m.tieTails || []).map(n => ({ beatPos: n.beatPos, dur: n.dur })))]
+                .sort((a, b) => a.beatPos - b.beatPos);
+              const isShort = (d) => d < 0.99;
+              const is16 = (d) => d < 0.3;              // 16分・3連16分
+              const is32 = (d) => d < 0.15;             // 32分
+              // 音が詰まっている小節（32分など）はフレット数字を小さくして重ならないようにする
+              const pxPerBeat = (measureWidth - 34) / 4;
+              const onsets = [...new Set(mains.map(n => n.beatPos.toFixed(3)))].map(Number).sort((a, b) => a - b);
+              let minGap = 99; for (let k = 1; k < onsets.length; k++) minGap = Math.min(minGap, (onsets[k] - onsets[k - 1]) * pxPerBeat);
+              const fs = minGap < 19 ? Math.max(8, minGap * 0.66) : 13;
+              const fsScale = fs / 13;
+              const isTrip = (d) => Math.abs(d - 1/3) < 0.02 || Math.abs(d - 1/6) < 0.02;
+              const groups = {};
+              rhythm.forEach(r => { if (isShort(r.dur)) { const g = Math.floor(r.beatPos + 1e-6); (groups[g] = groups[g] || []).push(r); } });
+
               return (
                 <g key={mIdx}>
-                  {m.notes.map((n, nIdx) => {
-                    const xPos = measureStartX + 22 + (n.beatPos / 4.0) * (measureWidth - 34);
-                    const lineIdx = 3 - n.tab.stringIdx;
-                    const yPos = 15 + lineIdx * 14;
-                    
-                    // 桁数に応じてテキスト背景の幅を最小限に調整（重なり防止）
-                    let textWidth = 10;
-                    if (n.tab.fret.length === 2) textWidth = 14;
-                    if (n.tab.fret.length >= 3) textWidth = 22;
+                  {isCur && <rect x={mStart + 1} y={TOP - 30} width={measureWidth - 2} height={H - TOP + 26} fill="#fef3c7" opacity="0.45" />}
+                  {m.hint && (
+                    <text x={mStart + measureWidth - 6} y={TOP - 31} textAnchor="end" fill="#7c3aed" fontSize="10.5" fontWeight="700" fontFamily="sans-serif">{m.hint}</text>
+                  )}
+                  <text x={mStart + 8} y={TOP - 22} fill="#0f172a" fontSize="15" fontWeight="800" fontFamily="sans-serif">
+                    {(m.chord || "").split(/\s+/).filter(Boolean).length === 2 ? "" : m.chord}
+                  </text>
+                  {(m.chord || "").split(/\s+/).filter(Boolean).length === 2 && (m.chord.split(/\s+/).filter(Boolean)).map((c, ci) => (
+                    <text key={ci} x={xOf(mStart, ci * 2) - 10} y={TOP - 22} fill="#0f172a" fontSize="15" fontWeight="800" fontFamily="sans-serif">{c}</text>
+                  ))}
 
+                  {(m.notes || []).map((n, nIdx) => {
+                    const xPos = xOf(mStart, n.beatPos);
+                    const yPos = TOP + (3 - n.tab.stringIdx) * GAP;
+                    const txt = hideFrets ? "?" : n.tab.fret;
+                    const tw = (String(txt).length >= 3 ? 24 : (String(txt).length >= 2 ? 16 : 11)) * fsScale;
+                    const active = activeBeat !== null && near(n.beatPos, activeBeat);
                     return (
                       <g key={nIdx}>
-                        {n.posLabel && (
-                          <text x={xPos} y="8" textAnchor="middle" fill="#b45309" fontSize="8.5" fontWeight="800" fontFamily="serif">
-                            {n.posLabel}
-                          </text>
+                        {n.posLabel && !hideFrets && (
+                          <text x={xPos} y={TOP - 8} textAnchor="middle" fill="#b45309" fontSize="9.5" fontWeight="800" fontFamily="serif">{n.posLabel}</text>
                         )}
-                        <rect
-                          x={xPos - textWidth / 2}
-                          y={yPos - 6.5}
-                          width={textWidth}
-                          height={13}
-                          fill="#ffffff"
-                        />
-                        <text
-                          x={xPos}
-                          y={yPos + 3.5}
-                          textAnchor="middle"
-                          fill={n.isHarm ? "#b45309" : "#0f172a"}
-                          fontSize="11"
-                          fontWeight="800"
-                          fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
-                        >
-                          {n.tab.fret}
-                        </text>
+                        <rect x={xPos - tw / 2} y={yPos - 7.5} width={tw} height={15} rx="3" fill={active ? "#f59e0b" : "#ffffff"} />
+                        <text x={xPos} y={yPos + 4.5} textAnchor="middle" fill={active ? "#ffffff" : (hideFrets ? "#94a3b8" : (n.isHarm ? "#b45309" : "#0f172a"))}
+                          fontSize={fs} fontWeight="800" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">{txt}</text>
                       </g>
                     );
                   })}
 
-                  <line
-                    x1={measureStartX + measureWidth}
-                    y1="15"
-                    x2={measureStartX + measureWidth}
-                    y2="57"
-                    stroke="#0f172a"
-                    strokeWidth={mIdx === 3 ? "2" : "1.3"}
-                  />
+                  {showChordInfo && (() => {
+                    // 和音の一番上の音の右上に番号
+                    const tops = {};
+                    (m.notes || []).forEach(n => { const k = n.beatPos.toFixed(3); if (!(k in tops) || n.tab.stringIdx > tops[k]) tops[k] = n.tab.stringIdx; });
+                    return Object.keys(tops).filter(k => (mIdx + ":" + k) in marks).map(k => {
+                      const x = xOf(mStart, parseFloat(k)) + 10, y = TOP + (3 - tops[k]) * GAP - 6;
+                      return <text key={"mk" + k} x={x} y={y} fill="#7c3aed" fontSize="10" fontWeight="800">{CIRCLED[marks[mIdx + ":" + k]] || "●"}</text>;
+                    });
+                  })()}
+
+                  {(m.tieTails || []).flatMap((n, i) => (n.tabs || (n.tab ? [n.tab] : [])).map((tb, k) => {
+                    const xPos = xOf(mStart, n.beatPos);
+                    const yPos = TOP + (3 - tb.stringIdx) * GAP;
+                    const txt = hideFrets ? "?" : `(${tb.fret})`;
+                    return (
+                      <g key={"t" + i + "_" + k}>
+                        <rect x={xPos - 12} y={yPos - 7.5} width={24} height={15} fill="#ffffff" />
+                        <text x={xPos} y={yPos + 4.5} textAnchor="middle" fill="#64748b" fontSize="12" fontWeight="700" fontFamily="ui-monospace, monospace">{txt}</text>
+                      </g>
+                    );
+                  }))}
+
+                  {/* リズム：符尾・連桁・付点 */}
+                  {rhythm.map((r, i) => {
+                    const x = xOf(mStart, r.beatPos);
+                    if (r.dur >= 3.9) return null;                                        // 全音符：符尾なし
+                    const stemBottom = r.dur >= 1.99 ? BEAM_Y - 9 : BEAM_Y;               // 2分音符は短い符尾
+                    const dotted = [1.5, 3, 0.75, 2.5].some(d => near(r.dur, d));
+                    const g = groups[Math.floor(r.beatPos + 1e-6)];
+                    const single = isShort(r.dur) && (!g || g.length < 2);
+                    return (
+                      <g key={"r" + i}>
+                        <line x1={x} y1={STEM_TOP} x2={x} y2={stemBottom} stroke="#334155" strokeWidth="1.4" />
+                        {dotted && <circle cx={x + 5} cy={stemBottom - 3} r="1.8" fill="#334155" />}
+                        {single && <path d={`M${x},${BEAM_Y} q6,-3 7,-9`} fill="none" stroke="#334155" strokeWidth="1.6" />}
+                        {single && is16(r.dur) && <path d={`M${x},${BEAM2_Y} q6,-3 7,-9`} fill="none" stroke="#334155" strokeWidth="1.6" />}
+                        {single && is32(r.dur) && <path d={`M${x},${BEAM3_Y} q6,-3 7,-9`} fill="none" stroke="#334155" strokeWidth="1.6" />}
+                      </g>
+                    );
+                  })}
+                  {Object.values(groups).filter(g => g.length >= 2).map((g, gi) => {
+                    const x1 = xOf(mStart, g[0].beatPos), x2 = xOf(mStart, g[g.length - 1].beatPos);
+                    const segs = [], segs3 = [];
+                    for (let k = 0; k < g.length - 1; k++) {
+                      if (is16(g[k].dur) && is16(g[k + 1].dur)) segs.push([xOf(mStart, g[k].beatPos), xOf(mStart, g[k + 1].beatPos)]);
+                      if (is32(g[k].dur) && is32(g[k + 1].dur)) segs3.push([xOf(mStart, g[k].beatPos), xOf(mStart, g[k + 1].beatPos)]);
+                    }
+                    const trip = g.some(r => isTrip(r.dur));
+                    return (
+                      <g key={"b" + gi}>
+                        <line x1={x1} y1={BEAM_Y} x2={x2} y2={BEAM_Y} stroke="#334155" strokeWidth="3" />
+                        {segs.map(([a, b], si) => <line key={si} x1={a} y1={BEAM2_Y} x2={b} y2={BEAM2_Y} stroke="#334155" strokeWidth="3" />)}
+                        {segs3.map(([a, b], si) => <line key={"t" + si} x1={a} y1={BEAM3_Y} x2={b} y2={BEAM3_Y} stroke="#334155" strokeWidth="3" />)}
+                        {trip && <text x={(x1 + x2) / 2} y={BEAM_Y + 11} textAnchor="middle" fill="#334155" fontSize="10" fontWeight="700" fontStyle="italic">3</text>}
+                      </g>
+                    );
+                  })}
+                  {(m.rests || []).map((r, i) => {
+                    const x = xOf(mStart, r.beatPos) + (r.dur >= 3.9 ? (measureWidth - 34) * 0.4 : 0);
+                    const kind = r.dur >= 3.9 ? "whole" : r.dur >= 1.99 ? "half" : r.dur >= 0.99 ? "quarter" : r.dur >= 0.49 ? "eighth" : "sixteenth";
+                    return <g key={"z" + i}>{REST_SHAPES[kind](x, REST_Y)}</g>;
+                  })}
+
+                  {showDegrees && mains.map((n, i) => n.label ? (
+                    <text key={"d" + i} x={xOf(mStart, n.beatPos)} y={DEG_Y} textAnchor="middle" fill="#b45309"
+                      fontSize={mains.length > 10 ? "9" : "10.5"} fontWeight="700" fontFamily="ui-monospace, monospace">{n.label}</text>
+                  ) : null)}
+
+                  <line x1={mStart + measureWidth} y1={TOP} x2={mStart + measureWidth} y2={BOTTOM}
+                    stroke="#0f172a" strokeWidth={mIdx === measures.length - 1 && mIdx === perLine - 1 ? "2" : "1.3"} />
                 </g>
               );
             })}
           </svg>
+          {showChordInfo && legends.some(l => l.length > 0) && (
+            <div className="grid gap-x-3 text-[11px] leading-snug text-violet-700 pb-1"
+              style={{ gridTemplateColumns: `repeat(${perLine}, minmax(0, 1fr))`, paddingLeft: "3.6%", paddingRight: "0.7%" }}>
+              {legends.map((gs, mIdx) => (
+                <div key={mIdx} className="min-w-0">
+                  {gs.map((g, k) => (
+                    <div key={k} className="break-words">
+                      <span className="font-extrabold">{CIRCLED[k] || "●"}</span>{" "}
+                      {g.runName && <span className="font-bold">{g.runName}：</span>}
+                      <span>{g.style}</span>
+                      <span className="text-slate-500">{"　"}{g.degs.slice(0, 3).join(" → ")}{g.degs.length > 3 ? " …" : ""}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       );
     };
+
 
     function App() {
       const [category, setCategory] = useState("ALL");
@@ -1630,6 +2599,18 @@
       const [currentSong, setCurrentSong] = useState(STANDARD_SONGS[0]);
       const [measureCount, setMeasureCount] = useState(STANDARD_SONGS[0].measures);
       const [chords, setChords] = useState([...STANDARD_SONGS[0].chords]);
+      // コードメロディのモード：テーマのメロディがある曲だけ。その場で編曲して完コピと同じ形で表示・再生する
+      const cmMode = CM_MODES.find(m => m.id === category) || null;
+      const isCmMode = !!cmMode && !!currentSong.melodyBars && !currentSong.isTranscription;
+      const [cmSeed, setCmSeed] = useState(1);            // 「再生成」でフィルを変える
+      const playSong = React.useMemo(() => {
+        if (!isCmMode) return currentSong;
+        const cm = arrangeBassChordMelody(currentSong.melodyBars, chords, cmMode.cm, cmSeed);
+        return { ...currentSong, isTranscription: true, isChordMelody: true, noBacking: true, transcriptionBars: cm.bars, transcriptionTab: cm.tabs, transcriptionInfo: cm.infos };
+      }, [currentSong, category, chords, cmSeed]);
+      useEffect(() => {
+        if (cmMode && (!currentSong.melodyBars || currentSong.isTranscription)) setCategory("ALL");
+      }, [currentSong]);
       const [isModalOpen, setIsModalOpen] = useState(false);
       
       const [systemsData, setSystemsData] = useState([]);
@@ -1638,6 +2619,11 @@
       const [playerReady, setPlayerReady] = useState(false);
       const [isPlaying, setIsPlaying] = useState(false);
       const [playProgress, setPlayProgress] = useState(0);
+      const [curBeat, setCurBeat] = useState(-1);           // 再生位置（曲頭からの拍数）
+      const [showStaff, setShowStaff] = useState(false);    // 五線譜は初期状態で畳む（TAB主役）
+      const [showDegrees, setShowDegrees] = useState(true);
+      const [hideFrets, setHideFrets] = useState(false);    // TABを隠して先に音だけ聴く
+      const [showChordInfo, setShowChordInfo] = useState(true);   // 和音・フィルの意図（コードメロディのモード）
       const [loopOn, setLoopOn] = useState(false);
       const [playerError, setPlayerError] = useState("");
       const [isPriming, setIsPriming] = useState(false); // 初回再生時の音声生成中
@@ -1651,6 +2637,7 @@
       const volRef = useRef({ vol: 70, backingOnly: false });
 
       const generateEtude = () => {
+        const currentSong = playSong;   // コードメロディのモードでは、編曲したテーマを完コピと同じ形で扱う
         let genSystems = [];
         let allAudioMelody = "";
         let allComping = "";
@@ -1715,6 +2702,8 @@
 
             let measureAbc = `"${chordRaw}"`;
             let measureTabNotes = [];
+            let measureRests = [];     // TAB上のリズム表示用の休符
+            let measureTieTails = [];  // タイの後ろ側（TABでは括弧付きで表示）
             let measureAccRef = {};
             const globalMeasureIdx = sysIdx * perLine + tabMeasures.length;
             let measureNotesData = [];
@@ -1744,6 +2733,7 @@
 
                 if (isRest) {
                   measureAbc += prefix + abcDur;
+                  measureRests.push({ beatPos: measureBeat, dur: durBeat });
                 } else {
                   const isChordEv = Array.isArray(trebleMidi);
                   const clampReal = (tm) => Math.max(MIN_BASS_MIDI, Math.min(MAX_BASS_MIDI, tm - 24));
@@ -1763,6 +2753,7 @@
                   if (isTieTail) {
                     // タイの後ろ側の音：TABでは再度弾かない。歌詞（度数）行は位置合わせのため「*」でスキップ
                     lineWords += "* ";
+                    measureTieTails.push({ beatPos: measureBeat, dur: durBeat, fixed: (currentSong.transcriptionTab && currentSong.transcriptionTab[globalMeasureIdx]) ? currentSong.transcriptionTab[globalMeasureIdx][evIdx] : null });
                   } else {
                     const label = getDegreeLabelFromMidi(realMidi, activeChord);
                     lineWords += label + " ";
@@ -1770,11 +2761,15 @@
 
                     measureNotesData.push({
                       beatPos: measureBeat,
+                      dur: durBeat,
+                      label: currentSong.noDegrees ? null : label,
                       midi: realMidi,
                       isHarm: false,
                       chordMinMidi: MIN_BASS_MIDI,
                       chordMaxMidi: MAX_BASS_MIDI,
                       chordExtra: isChordEv ? trebleMidi.map(clampReal).filter(m => m !== realMidi) : null,
+                      chordInfo: (currentSong.transcriptionInfo && currentSong.transcriptionInfo[globalMeasureIdx]) ? currentSong.transcriptionInfo[globalMeasureIdx][evIdx] : null,
+                      chordRef: activeChord,
                       fixedTab: (currentSong.transcriptionTab && currentSong.transcriptionTab[globalMeasureIdx]) ? currentSong.transcriptionTab[globalMeasureIdx][evIdx] : null
                     });
                   }
@@ -1816,7 +2811,7 @@
 
                 if (category !== "ALL") {
                   if (category === "TRIAD" && !cell.cat.includes("Triad") && !cell.cat.includes("Drop")) return false;
-                  if (category === "BEBOP" && !cell.cat.includes("Parker") && !cell.cat.includes("Coltrane") && !cell.cat.includes("Bach") && !cell.cat.includes("V7")) return false;
+                  if (category === "BEBOP" && !cell.cat.includes("Parker") && !cell.cat.includes("Coltrane") && !cell.cat.includes("Christian") && !cell.cat.includes("Bach") && !cell.cat.includes("V7")) return false;
                   if (category === "PENTA" && !cell.cat.includes("Mechanical")) return false;
                 }
                 // Donna Lee由来フレーズは、元のコード種別（ii-Vは2コード）に合う小節にだけ使う
@@ -1832,6 +2827,11 @@
                 return true;
               });
 
+              // Barry Harris：6thディミニッシュ・スケールから、その場でラインを作る（表拍にコードトーン）
+              if (category === "BH" && !spanNow) {
+                const bhPool = makeBarryHarrisCells(chord1, chord2, !!c2Str, true);
+                if (bhPool.length) pool = bhPool;
+              }
               if (pool.length === 0) {
                 pool = PHRASE_DICTIONARY.filter(c => (!allow16th ? !hasSixteenth(c) : true) && !c.onlyV7 && !c.onlyMajor && !c.onlyMinor && !c.q && !c.span2);
               }
@@ -1934,6 +2934,14 @@
               } else if (cell.span2) {
                 pendingSpan = { cell: { cat: cell.cat + " (2/2)", p: cell.p2, d: cell.d2, authentic: true, spanTail: true }, root: actualRoot1 };
               }
+              // トライアドのフレーズ：音の並びはそのままに、ジャズの実フレーズのリズム（休符・3連・16分・付点）を当てる
+              if (!spanNow && !cell.span2 && !cell.isHarm && (cell.cat.includes("Triad") || cell.cat.includes("Drop")) && Math.random() < TRIAD_RHYTHM_PROB) {
+                const rl = (JAZZ_RHYTHMS[cell.d.length] || []).filter(r => allow16th || !hasSixteenth({ p: r.p }));
+                if (rl.length) {
+                  const pickR = rl[Math.floor(Math.random() * rl.length)];
+                  cell = { ...cell, p: pickR.p, rhythmFrom: pickR.from };
+                }
+              }
 
               // 1小節内に2つ目のコードがある場合、前半の最後の音から同音を避けて半音・全音で繋がるオクターブを選択
               let actualRoot2 = actualRoot1;
@@ -1977,6 +2985,7 @@
 
                 if (isRest) {
                   measureAbc += prefix + abcDur;
+                  measureRests.push({ beatPos: measureBeat, dur: durBeat });
                 } else {
                   const degName = cell.d[noteIdx] || 'R';
                   const offset = degrees[degName] !== undefined ? degrees[degName] : 0;
@@ -2063,6 +3072,8 @@
                   const chordOffsets = cell.d.map(deg => (degrees[deg] !== undefined ? degrees[deg] : 0));
                   measureNotesData.push({
                     beatPos: measureBeat,
+                    dur: durBeat,
+                    label,
                     midi: realMidi,
                     isHarm: !!cell.isHarm,
                     chordMinMidi: activeRoot + Math.min(...chordOffsets),
@@ -2164,6 +3175,11 @@
               }
               measureTabNotes.push({
                 beatPos: n.beatPos,
+                dur: n.dur,
+                label: n.label,
+                isMain: true,
+                chordDesc: n.chordInfo ? { group: n.chordInfo.group, style: n.chordInfo.style, runName: null,
+                  degs: [n.midi, ...(n.chordExtra || [])].sort((a, b) => b - a).map(m => getDegreeLabelFromMidi(m, n.chordRef)).join("・") } : null,
                 tab: { stringIdx: t.stringIdx, fret: t.fret, fretNum: t.fretNum, box: t.box, out: !!t.out },
                 isHarm: n.isHarm,
                 posLabel
@@ -2192,6 +3208,13 @@
                 });
               }
             });
+            // タイの後ろ側：直前に弾いた音と同じ弦・フレットを括弧付きで表示（和音は全部の音）
+            measureTieTails.forEach(tt => {
+              const before = measureTabNotes.filter(x => x.isMain && x.beatPos < tt.beatPos).pop();
+              const src0 = before ? before.tab : (prevTabState ? { stringIdx: prevTabState.stringIdx, fret: String(prevTabState.fret), fretNum: prevTabState.fretNum } : null);
+              tt.tab = src0 ? { stringIdx: src0.stringIdx, fret: String(src0.fret), fretNum: src0.fretNum } : null;
+              tt.tabs = (tt.fixed && tt.fixed.length) ? tt.fixed.map(([st, f]) => ({ stringIdx: st, fret: String(f), fretNum: f })) : (tt.tab ? [tt.tab] : []);
+            });
             if (bestPlan.last) {
               prevTabState = bestPlan.last;
               currentFretCenter = bestPlan.last.box;
@@ -2206,7 +3229,7 @@
             }
 
             lineAbc += measureAbc + " | ";
-            tabMeasures.push({ chord: chordRaw, notes: measureTabNotes });
+            tabMeasures.push({ chord: chordRaw, notes: measureTabNotes, rests: measureRests, tieTails: measureTieTails, hint: cell && cell.hint ? cell.hint : null });
             
             let compAccRef = {};
             const v1 = getPianoVoicing(chord1, currentSong.key, compAccRef);
@@ -2250,7 +3273,7 @@
 
       useEffect(() => {
         generateEtude();
-      }, [category, allow16th, currentSong, chords]);
+      }, [category, allow16th, currentSong, chords, playSong]);
 
       // スコア描画
       useEffect(() => {
@@ -2267,7 +3290,15 @@
             });
           }
         });
-      }, [systemsData]);
+      }, [systemsData, showStaff]);
+
+      // 再生中の段が画面外に出たら自動でスクロール（譜面を追いやすく）
+      const activeSys = (isPlaying && curBeat >= 0) ? Math.floor(curBeat / 4 / ((systemsData[0] && systemsData[0].perLine) || 4)) : -1;
+      useEffect(() => {
+        if (activeSys < 0) return;
+        const el = document.getElementById(`system-${activeSys}`);
+        if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }, [activeSys]);
 
       useEffect(() => { loopRef.current = loopOn; }, [loopOn]);
 
@@ -2544,6 +3575,8 @@
               if (!ev) { finishPlayback(); return; }
               if (typeof ev.milliseconds === "number" && P.totalMs > 0) {
                 setPlayProgress(Math.min(1, ev.milliseconds / P.totalMs));
+                const mpm = visualObj.millisecondsPerMeasure();
+                if (mpm > 0) setCurBeat(ev.milliseconds / mpm * 4);
               }
               highlightEvent(ev);
               return "continue";
@@ -2565,7 +3598,7 @@
 
       // 伴奏音量・「ピアノ伴奏のみ再生」は再生中でもリアルタイムに反映（70%が従来の音量）
       useEffect(() => {
-        volRef.current = { vol: backingVol, backingOnly: isBackingOnly && !currentSong.noBacking };
+        volRef.current = { vol: backingVol, backingOnly: isBackingOnly && !playSong.noBacking };
         const P = playerRef.current;
         if (!P.ctx || !P.pianoGain || !P.bassGain) return;
         if (!P.live) {
@@ -2575,8 +3608,8 @@
         }
         const now = P.ctx.currentTime;
         P.pianoGain.gain.setTargetAtTime(backingVol / 70, now, 0.02);
-        P.bassGain.gain.setTargetAtTime((isBackingOnly && !currentSong.noBacking) ? 0 : 1, now, 0.02);
-      }, [backingVol, isBackingOnly, currentSong]);
+        P.bassGain.gain.setTargetAtTime((isBackingOnly && !playSong.noBacking) ? 0 : 1, now, 0.02);
+      }, [backingVol, isBackingOnly, playSong]);
 
       return (
         <div className="flex flex-col flex-1 bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-slate-200">
@@ -2610,29 +3643,34 @@
                 <span>16分音符を使用</span>
               </label>
 
+
               <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                 {[
                   { id: "ALL", label: "All Mix" },
                   { id: "TRIAD", label: "Triad" },
                   { id: "BEBOP", label: "Jazz Phrase" },
-                  { id: "PENTA", label: "Mechanical" }
-                ].map(tab => (
+                  { id: "PENTA", label: "Mechanical" },
+                  { id: "BH", label: "Barry Harris", desc: "6thディミニッシュ・スケール（メジャー6th／マイナー6th／7th）。m7は短3度上の6th、m7b5は短3度上のマイナー6th、dim7は半音上のマイナー6thで考える" },
+                  ...CM_MODES
+                ].map(tab => { const off = !!tab.cm && (!currentSong.melodyBars || currentSong.isTranscription); return (
                   <button
                     key={tab.id}
+                    disabled={off}
                     onClick={() => setCategory(tab.id)}
+                    title={tab.desc || (off ? "テーマのメロディが入っている曲（Autumn Leaves）で使えます" : "")}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
                       category === tab.id
                         ? "bg-white text-amber-600 shadow-sm"
-                        : "text-slate-500 hover:text-slate-700"
+                        : (off ? "text-slate-300 cursor-not-allowed" : "text-slate-500 hover:text-slate-700")
                     }`}
                   >
                     {tab.label}
                   </button>
-                ))}
+                ); })}
               </div>
 
               <button
-                onClick={generateEtude}
+                onClick={() => (isCmMode ? setCmSeed(x => x + 1) : generateEtude())}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs md:text-sm rounded-xl transition flex items-center gap-1.5 shadow-sm"
               >
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2673,7 +3711,7 @@
           {/* 伴奏プレイヤーバー（添付ファイル arpeggio solo etude.html のプレイヤーUIを統合） */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-4">
-              {!currentSong.noBacking && (<label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+              {!playSong.noBacking && (<label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
                 <input
                   type="checkbox"
                   checked={isBackingOnly}
@@ -2694,8 +3732,8 @@
                 />
               </div>
 
-              {currentSong.noBacking ? (
-                <span className="text-xs text-slate-400">伴奏なし（ソロ曲）</span>
+              {playSong.noBacking ? (
+                <span className="text-xs text-slate-400">{isCmMode ? "伴奏なし（コードメロディ）" : "伴奏なし（ソロ曲）"}</span>
               ) : (<div className="flex items-center gap-2 text-xs text-slate-600">
                 <span>伴奏音量: {backingVol}%</span>
                 <input
@@ -2758,11 +3796,29 @@
           </div>
 
           {/* 楽譜描画エリア（真っ白な紙の上に濃い黒・濃紺でくっきり描画） */}
-          <div id="score-wrapper" className="flex-1 w-full bg-white text-slate-900 rounded-xl p-4 md:p-6 overflow-y-auto">
+          {/* 表示切り替え */}
+          <div className="flex flex-wrap items-center gap-2 mb-3 text-xs font-bold text-slate-700">
+            {[
+              { label: "五線譜も表示", val: showStaff, set: setShowStaff },
+              { label: "度数を表示", val: showDegrees, set: setShowDegrees },
+              { label: "TABを隠して先に聴く", val: hideFrets, set: setHideFrets },
+              ...(isCmMode ? [{ label: "和音の説明", val: showChordInfo, set: setShowChordInfo }] : [])
+            ].map(t => (
+              <label key={t.label} className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border shadow-sm transition ${t.val ? "bg-amber-50 border-amber-300" : "bg-white border-slate-200 hover:bg-slate-50"}`}>
+                <input type="checkbox" checked={t.val} onChange={(e) => t.set(e.target.checked)}
+                  className="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-0 cursor-pointer" />
+                <span>{t.label}</span>
+              </label>
+            ))}
+            {isCmMode && <span className="text-[11px] text-slate-400 font-normal">{cmMode.desc}</span>}
+          </div>
+
+          <div id="score-wrapper" className="flex-1 w-full bg-white text-slate-900 rounded-xl p-2 md:p-4 overflow-y-auto">
             {systemsData.map((sys, idx) => (
-              <div key={idx} className="mb-2 last:mb-0">
-                <div id={`abc-system-${idx}`} className="w-full"></div>
-                <FourStringBassTab measures={sys.tabMeasures} perLine={sys.perLine || 4} />
+              <div key={idx} id={`system-${idx}`} className="mb-2 last:mb-0">
+                <div id={`abc-system-${idx}`} className="w-full" style={{ display: showStaff ? "block" : "none" }}></div>
+                <BassTab measures={sys.tabMeasures} perLine={sys.perLine || 4} startMeasure={idx * (sys.perLine || 4)}
+                  curBeat={isPlaying ? curBeat : -1} hideFrets={hideFrets} showDegrees={showDegrees} showChordInfo={isCmMode && showChordInfo} />
               </div>
             ))}
             <div id="audio-hidden-paper" style={{ position: 'absolute', top: '-9999px', visibility: 'hidden' }}></div>
