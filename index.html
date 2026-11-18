@@ -1877,6 +1877,155 @@ const AUTUMN_LEAVES_MELODY = [
       return cells;
     };
 
+    // ── Minor Scales モード（ギター版トレーナーのLv3+から移植）：メロディックマイナー／ハーモニックマイナー ──
+    // maj7はトライアドかメジャー・スケール。ドミナント7・マイナー・m7b5・dim7で、メロディックマイナー（MM）とハーモニックマイナー（HM）のモードを使う
+    // pcs＝コードのルートから見たスケール音、ct＝コードトーン、color＝そのスケールらしい音（表拍に来てよい）、avoid＝表拍に置かない音、passing＝経過音としてだけ使う音
+    const MM_PCS = [0, 2, 3, 5, 7, 9, 11], HM_PCS = [0, 2, 3, 5, 7, 8, 11];
+    const shiftPcs = (arr, k) => arr.map(x => (x + k) % 12).sort((a, b) => a - b);   // 親スケールのルートがコードのルート+k
+    const msScalesFor = (chord, next, focus) => {
+      const q = chordQuality(chord.name);
+      const t = String(chord.name || "").replace(/^[A-G][#b]?/, "").split("/")[0];
+      const nm = (k) => PC_NAMES[(chord.rootPc + k) % 12];
+      const out = [];
+      const add = (fam, k, mode, o) => out.push({ fam, pcs: shiftPcs(fam === "MM" ? MM_PCS : HM_PCS, k), mode,
+        hint: `${nm(k)} ${fam === "MM" ? "mel.min" : "har.min"}${mode ? "＝" + mode : ""}`, ...o });
+      const nq = next ? chordQuality(next.name) : null;
+      const down5 = next && ((next.rootPc - chord.rootPc + 12) % 12) === 5;      // 5度下（4度上）へ解決
+      const downHalf = next && ((next.rootPc - chord.rootPc + 12) % 12) === 11;  // 半音下へ（裏コード）
+      const wantMM = focus !== "HM", wantHM = focus !== "MM";
+      if (q === "maj") {
+        if (/#5|\+|aug/.test(t)) { add("MM", 9, "リディアン♯5", { ct: [0, 4, 8, 11], color: [2, 6, 9], avoid: [] }); return out; }
+        const lyd = /#11|#4/.test(t);
+        out.push({ fam: "MAJ", pcs: lyd ? [0, 2, 4, 6, 7, 9, 11] : [0, 2, 4, 5, 7, 9, 11], hint: `${nm(0)} ${lyd ? "リディアン" : "メジャー・スケール"}`,
+          ct: [0, 4, 7, t.includes("6") ? 9 : 11], color: [2, 9], avoid: lyd ? [] : [5] });
+        out.push({ fam: "TRI", pcs: [0, 4, 7], hint: `${nm(0)} トライアド`, ct: [0, 4, 7], color: [], avoid: [] });
+        return out;
+      }
+      if (q === "dom") {
+        const altName = /alt|b9|#9|b13|#5|\+/.test(t);
+        if (!altName && (/#11/.test(t) || downHalf || (next && !down5))) {        // 解決しないドミナント・裏コード
+          add("MM", 7, "リディアン♭7", { ct: [0, 4, 7, 10], color: [2, 6, 9], avoid: [] });
+          if (!wantHM || !down5) return out;
+        }
+        const toMinor = nq === "min" || nq === "hdim" || nq === "dim";
+        if (wantMM || !toMinor) {
+          add("MM", 1, "オルタード", { ct: [0, 4, 10], color: [1, 3, 6, 8], avoid: [] });
+          out.push({ fam: "PENT", pcs: shiftPcs([0, 3, 5, 7, 10], 3), hint: `${nm(3)}mペンタ＝オルタード`, ct: [10], color: [1, 3, 6, 8], avoid: [] });
+        }
+        if (wantMM && toMinor) add("MM", 5, "ミクソ♭6", { ct: [0, 4, 7, 10], color: [2, 8], avoid: [5] });
+        if (wantHM) add("HM", 5, "フリジアン・ドミナント", { ct: [0, 4, 7, 10], color: [1, 8], avoid: [5] });
+        return out;
+      }
+      if (q === "hdim") {
+        if (wantMM) add("MM", 3, "ロクリアン♮2", { ct: [0, 3, 6, 10], color: [2, 5], avoid: [] });
+        if (wantHM) add("HM", 10, "ロクリアン♮6", { ct: [0, 3, 6, 10], color: [5, 9], avoid: [1] });
+        return out;
+      }
+      if (q === "dim") { add("HM", 1, "dim7（第7モード）", { ct: [0, 3, 6, 9], color: [1, 8], avoid: [] }); return out; }
+      // マイナー：ii（次が4度上のドミナント）ならジャズ・マイナー（♮7は経過音だけ）。トニックのマイナーなら MM・HM どちらも
+      const isII = next && nq === "dom" && down5 && !/maj|M7|6/.test(t);
+      const m7 = /7|9|11/.test(t) && !/maj|M7/.test(t);                          // m7系では ♮7 は経過音としてだけ使う
+      if (isII || wantMM) add("MM", 0, isII ? "m6の響き" : "", { ct: [0, 3, 7], color: m7 ? [2, 5, 9] : [2, 5, 9, 11], avoid: [], passing: m7 ? [11] : [] });
+      if (!isII && wantHM) add("HM", 0, "", { ct: [0, 3, 7], color: m7 ? [2, 5, 8] : [2, 5, 8, 11], avoid: [], passing: m7 ? [11] : [] });
+      if (!out.length) add("MM", 0, "", { ct: [0, 3, 7], color: [2, 5, 9], avoid: [] });
+      return out;
+    };
+    // スケール上の何音目に動くか（累積）。8分×8
+    const MS_PAT8 = [
+      { k: "下降", s: [0, -1, -1, -1, -1, -1, -1, -1] },
+      { k: "上昇", s: [0, 1, 1, 1, 1, 1, 1, 1] },
+      { k: "アルペジオ↑→スケール↓", s: [0, 2, 2, 2, -1, -1, -1, -1] },
+      { k: "スケール↓→アルペジオ↑", s: [0, -1, -1, -1, -1, 2, 2, 2] },
+      { k: "アルペジオ↓→スケール↑", s: [0, -2, -2, -2, 1, 1, 1, 1] },
+      { k: "1-2-3-5", s: [0, 1, 1, 2, -1, -1, -1, -2] },
+      { k: "3度の下降", s: [0, 2, -3, 2, -3, 2, -3, 2] },
+      { k: "3度の上昇", s: [0, -2, 3, -2, 3, -2, 3, -2] },
+      { k: "ターン", s: [0, 1, -1, -1, 1, 2, 2, -1] }
+    ];
+    const MS_PAT_TRI = [
+      { k: "トライアド↑↓", s: [0, 1, 1, 1, -1, -1, -1, -1] },
+      { k: "トライアド↓↑", s: [0, -1, -1, -1, 1, 1, 1, 1] },
+      { k: "トライアド折り返し", s: [0, 1, -1, 2, -1, 2, -1, -1] },
+      { k: "トライアドの波", s: [0, 2, -1, 2, -1, -1, -1, 1] }
+    ];
+    const MS_PAT4 = [
+      { k: "下降", s: [0, -1, -1, -1] }, { k: "上昇", s: [0, 1, 1, 1] },
+      { k: "アルペジオ↑", s: [0, 2, 2, -1] }, { k: "アルペジオ↓", s: [0, -2, -2, 1] }, { k: "1-2-3-5", s: [0, 1, 1, 2] }
+    ];
+    const msWalk = (sc, startPc, pat) => {
+      const L = bhLadder(sc.pcs);
+      let i = L.indexOf(startPc); if (i < 0) return null;
+      const o = [];
+      for (const st of pat.s) { i += st; if (i < 0 || i >= L.length) return null; o.push(L[i]); }
+      return o;
+    };
+    // 表拍（0,2,4,6）にアボイドを置かない・コードトーンかカラーを3つ以上・経過音は前後が2半音以内
+    const msLineOk = (sc, o, strongIdx) => {
+      const pc = (v) => ((v % 12) + 12) % 12;
+      let good = 0;
+      for (const i of strongIdx) {
+        const x = pc(o[i]);
+        if ((sc.avoid || []).includes(x) || (sc.passing || []).includes(x)) return false;
+        if (sc.ct.includes(x) || sc.color.includes(x)) good++;
+      }
+      if (good < Math.ceil(strongIdx.length * 0.7)) return false;
+      for (let i = 0; i < o.length; i++) {
+        if (!(sc.passing || []).includes(pc(o[i]))) continue;
+        if ((i > 0 && Math.abs(o[i] - o[i - 1]) > 2) || (i < o.length - 1 && Math.abs(o[i + 1] - o[i]) > 2)) return false;
+      }
+      for (let i = 1; i < o.length; i++) if (o[i] === o[i - 1]) return false;
+      if (sc.color.length && !o.some(v => sc.color.includes(pc(v)))) return false;   // そのスケールらしい音を1つは入れる
+      return true;
+    };
+    const msStarts = (sc) => { const st = sc.ct.length ? sc.ct : sc.color; return [...st, ...st.map(c => c + 12)].filter(v => sc.pcs.includes(((v % 12) + 12) % 12)); };
+    const makeMinorScaleCells = (chord1, chord2, twoChords, useRests, nextChord, focus) => {
+      const cells = [];
+      if (!twoChords) {
+        msScalesFor(chord1, nextChord, focus).forEach(sc => {
+          const pats = sc.fam === "TRI" ? MS_PAT_TRI : MS_PAT8;
+          msStarts(sc).forEach(st => pats.forEach(pt => {
+            const o = msWalk(sc, st, pt);
+            if (!o || !msLineOk(sc, o, [0, 2, 4, 6])) return;
+            const cat = `MinorScale ${sc.hint} ${pt.k}`;
+            cells.push({ cat, p: ["8", "8", "8", "8", "8", "8", "8", "8"], d: o.map(v => "s" + v), authentic: true, ms: true, hint: sc.hint });
+            if (useRests) [...REST_MASKS].sort(() => Math.random() - 0.5).slice(0, 2).forEach(mask => {
+              const r = applyMask(o, mask);
+              if (r.d.length >= 4) cells.push({ cat: `${cat} ${mask}`, p: r.p, d: r.d, authentic: true, ms: true, hint: sc.hint });
+            });
+          }));
+        });
+        return cells;
+      }
+      // 1小節2コード：前半4音は chord1 のスケール、後半4音は chord2 のスケールで、同じ向きに続ける
+      const diff = ((chord1.rootPc - chord2.rootPc) + 12) % 12;
+      const scs1 = msScalesFor(chord1, chord2, focus).filter(sc => sc.fam !== "TRI" && sc.fam !== "PENT");
+      const scs2 = msScalesFor(chord2, nextChord, focus).filter(sc => sc.fam !== "TRI" && sc.fam !== "PENT");
+      scs1.forEach(sc1 => scs2.forEach(sc2 => msStarts(sc1).forEach(st => MS_PAT4.forEach(pt => {
+        const o1 = msWalk(sc1, st, pt);
+        if (!o1 || !msLineOk({ ...sc1, color: [] }, o1, [0, 2])) return;
+        const dir = pt.s[3] >= 0 && pt.k !== "アルペジオ↑" ? 1 : -1;
+        const last = o1[3] + diff;
+        // 次のコードのコードトーンへ半音・全音で着地
+        let st2 = null;
+        for (let k = 1; k <= 2 && st2 === null; k++) { const c = last + dir * k; if (sc2.ct.includes(((c % 12) + 12) % 12)) st2 = c; }
+        if (st2 === null) return;
+        MS_PAT4.forEach(pp => {
+          const o2 = msWalk(sc2, st2, pp);
+          if (!o2 || !msLineOk({ ...sc2, color: [] }, o2, [0, 2]) || o2[0] === o1[3] + diff) return;
+          const offs = [...o1, ...o2];
+          if (sc1.color.length + sc2.color.length && ![...o1.map(v => [sc1, v]), ...o2.map(v => [sc2, v])].some(([sc, v]) => sc.color.includes(((v % 12) + 12) % 12))) return;
+          const hint = `${sc1.hint} | ${sc2.hint}`;
+          const cat = `MinorScale ${hint} ${pt.k}/${pp.k}`;
+          cells.push({ cat, p: ["8", "8", "8", "8", "8", "8", "8", "8"], d: offs.map(v => "s" + v), authentic: true, ms: true, hint });
+          if (useRests) ["nnnhnnnh", "nnnrnnnn", "nhnnnnnr"].forEach(mask => {
+            const r = applyMask(offs, mask);
+            cells.push({ cat: `${cat} ${mask}`, p: r.p, d: r.d, authentic: true, ms: true, hint });
+          });
+        });
+      }))));
+      return cells;
+    };
+
     const hasSixteenth = (cell) => [...cell.p, ...(cell.p2 || [])].some(x => x === "16" || x === "trip16");
 
     // 音価の解決（完コピ譜面・アドリブ生成の両方で共通利用）
@@ -2245,7 +2394,43 @@ const AUTUMN_LEAVES_MELODY = [
     //  walk：4分のウォーキング（最後は次のコードのルートへ半音でアプローチ）
     //  arp ：8分のアルペジオ（上がる／下がる、最後はアプローチ）
     //  chord：ルート＋7度→ルート＋10度などの和音を刻む（内声が動く）
-    const cmMakeFill = (type, startAbs, len, chordName, nextChordName, rnd) => {
+    // フィル用の「一節」：パーカー（Donna Lee）・コルトレーン・クリスチャンの実フレーズから、
+    // 8分・3連・8分休符だけでできている1拍／2拍の切れ端を取り出す（音はコードのルートからの半音数）
+    let CM_FILL_CELLS = null;
+    const getFillCells = () => {
+      if (CM_FILL_CELLS) return CM_FILL_CELLS;
+      const BT = { "8": .5, "trip8": 1 / 3, "z8": .5 };
+      const out = [], seen = new Set();
+      PHRASE_DICTIONARY.forEach(c => {
+        if (!c.authentic || c.span2 || c.q2 || !c.q || !/Parker|Christian|Coltrane/.test(c.cat)) return;
+        if (!c.d.every(x => /^s-?\d+$/.test(x))) return;
+        // 各音の開始拍と、音の番号
+        let t = 0, ni = 0; const ev = [];
+        for (const tk of c.p) {
+          const d = BT[tk]; const ok = d !== undefined;
+          ev.push({ t, tk, ok, dur: ok ? d : null, ni: tk.startsWith("z") ? null : ni });
+          if (!tk.startsWith("z")) ni++;
+          t += ok ? d : ({ "16": .25, "4": 1, "4.": 1.5, "2": 2, "2.": 3, "1": 4, "trip16": 1 / 6, "q8": .4, z16: .25, z4: 1, z2: 2 }[tk] || 0);
+        }
+        [[0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2]].forEach(([s, L]) => {
+          const w = ev.filter(e => e.t >= s - 1e-6 && e.t < s + L - 1e-6);
+          if (!w.length || Math.abs(w[0].t - s) > 1e-6 || w.some(e => !e.ok)) return;
+          const end = w[w.length - 1].t + w[w.length - 1].dur;
+          if (Math.abs(end - (s + L)) > 1e-6) return;
+          const notes = w.filter(e => e.ni !== null);
+          if (notes.length < 2 || w[w.length - 1].tk.startsWith("z")) return;
+          const p = w.map(e => e.tk), offs = notes.map(e => parseInt(c.d[e.ni].slice(1), 10));
+          if (Math.max(...offs) - Math.min(...offs) > 14) return;
+          const key = p.join(",") + "|" + offs.join(",") + "|" + c.q.join(",");
+          if (seen.has(key)) return; seen.add(key);
+          out.push({ len: L, p, offs, q: c.q, from: c.cat.replace(/ \d+$/, ""), trip: p.includes("trip8") });
+        });
+      });
+      CM_FILL_CELLS = out;
+      return out;
+    };
+
+    const cmMakeFill = (type, startAbs, len, chordName, nextChordName, rnd, prevMidi = null) => {
       const ch = parseChord(chordName), r = ch.rootPc, T = cmTones(chordName);
       const lowRoot = (pc) => { let b = MIN_BASS_MIDI; while (cmPcRel(b, pc) !== 0) b++; return b; };   // 28〜39
       const R0 = lowRoot(r) + (lowRoot(r) < 31 && rnd() < 0.5 ? 12 : 0);
@@ -2272,6 +2457,40 @@ const AUTUMN_LEAVES_MELODY = [
       const out = [];
       // トライアドのフレーズの一部を、ジャズの実フレーズのリズム（2拍ぶんの型）で弾く
       const onGrid = Math.abs(startAbs - Math.round(startAbs)) < 1e-6;
+      // ビバップ：実フレーズの一節（8分と3連）をそのままのリズムで。直前のメロディから近い高さに置く
+      if (type === "bebop") {
+        const q = chordQuality(chordName);
+        const pool = onGrid ? getFillCells().filter(w => Math.abs(w.len - len) < 1e-6 && w.q.includes(q)) : [];
+        if (!pool.length) type = "triad";
+        else {
+          const trips = pool.filter(w => w.trip), wantTrip = trips.length && rnd() < 0.6;
+          const src0 = wantTrip ? trips : pool;
+          const w = src0[Math.floor(rnd() * src0.length)];
+          const ref = prevMidi !== null ? prevMidi : 40;
+          let best = null;
+          for (let base = lowRoot(r) - 12; base <= 60; base += 12) {
+            const ns = w.offs.map(o => base + o);
+            if (Math.min(...ns) < MIN_BASS_MIDI || Math.max(...ns) > 55) continue;
+            const sc = Math.abs(ns[0] - ref) + Math.max(0, Math.max(...ns) - 50) * 2;
+            if (!best || sc < best.sc) best = { ns, sc };
+          }
+          if (!best) type = "triad";
+          else {
+            let t0 = startAbs, j = 0, prev = null;
+            const BT = { "8": .5, "trip8": 1 / 3, "z8": .5 };
+            w.p.forEach(tk => {
+              const d = BT[tk];
+              if (tk.startsWith("z")) { out.push({ abs: t0, dur: d, notes: null }); t0 += d; return; }
+              let m = best.ns[j++];
+              // 最後の音：次のコードへ半音でつながるなら、そのアプローチ音に寄せる
+              if (j === best.ns.length && changes && prev !== null) { const a = approach(prev); if (a !== null && Math.abs(a - prev) <= 3) m = a; }
+              out.push({ abs: t0, dur: d, notes: [m] }); prev = m; t0 += d;
+            });
+            out.style = `フィル：ビバップの一節（${w.from}）を8分・3連のリズムで ${apText}`;
+            return out;
+          }
+        }
+      }
       if (type === "triad" && !(onGrid && (Math.abs(len - 2) < 1e-6 || Math.abs(len - 1) < 1e-6))) type = "arp";
       if (type === "triad") {
         const q = chordQuality(chordName);
@@ -2280,8 +2499,8 @@ const AUTUMN_LEAVES_MELODY = [
         const BT = { "16": .25, "8": .5, "4": 1, "4.": 1.5, "trip8": 1 / 3, "trip16": 1 / 6, z16: .25, z8: .5, z4: 1 };
         let rhythms;
         if (len > 1.5) rhythms = ((JAZZ_RHYTHMS.halves && JAZZ_RHYTHMS.halves.back) || []).map(h => h.p)
-          .filter(p => p.every(t => BT[t] !== undefined) && p.filter(t => !t.startsWith("z")).length <= Math.min(5, cell.d.length) && p.filter(t => !t.startsWith("z")).length >= 2 && !p.every(t => t === "8"));   // フィルは2拍で5音まで（詰め込みすぎない）
-        else rhythms = [["8", "8"], ["trip8", "trip8", "trip8"], ["16", "16", "8"], ["z8", "8"], ["8", "16", "16"]];
+          .filter(p => p.every(t => t === "8" || t === "trip8" || t === "z8") && p.filter(t => !t.startsWith("z")).length <= Math.min(5, cell.d.length) && p.filter(t => !t.startsWith("z")).length >= 2 && !p.every(t => t === "8"));   // フィルは2拍で5音まで（詰め込みすぎない）
+        else rhythms = [["8", "8"], ["trip8", "trip8", "trip8"], ["z8", "8"]];
         if (!rhythms.length) rhythms = [["8", "8", "8", "8"]];
         const rp = rhythms[Math.floor(rnd() * rhythms.length)];
         const k = rp.filter(t => !t.startsWith("z")).length;
@@ -2370,19 +2589,21 @@ const AUTUMN_LEAVES_MELODY = [
       const filled = []; let fillNo = 0;
       items.forEach((it, i) => {
         const nx = nextAttack(i), nxChord = nx ? nx.chord : null;
+        // フィルの種類：ビバップの一節（8分・3連）を中心に
         const pickType = () => { const x = rnd();
-          if (level === 1) return x < 0.55 ? "walk" : "triad";
-          if (level === 2) return x < 0.35 ? "arp" : x < 0.6 ? "walk" : "triad";
-          return x < 0.35 ? "chord" : x < 0.6 ? "arp" : "triad"; };
+          if (level === 1) return x < 0.55 ? "bebop" : x < 0.8 ? "walk" : "triad";
+          if (level === 2) return x < 0.65 ? "bebop" : x < 0.85 ? "triad" : "arp";
+          return x < 0.6 ? "bebop" : x < 0.8 ? "chord" : "triad"; };
+        const prevMel = () => { for (let k = filled.length - 1; k >= 0; k--) if (!filled[k].rest) return filled[k].midi; return null; };
         const pushFill = (fl) => { const g = "f" + (fillNo++);
           fl.forEach(f => filled.push(f.notes ? { abs: f.abs, dur: f.dur, rest: false, midi: f.notes[0], fixedNotes: f.notes, chord: chordAtAbs(f.abs), fill: true, info: { group: g, style: fl.style } }
                                               : { abs: f.abs, dur: f.dur, rest: true, midi: null, chord: chordAtAbs(f.abs) })); };
         if (!it.rest && it.dur >= 2 - 1e-6) {
           const fl = it.dur >= 3 - 1e-6 ? 2 : 1;
           filled.push({ ...it, dur: it.dur - fl });
-          pushFill(cmMakeFill(pickType(), it.abs + it.dur - fl, fl, it.chord, nxChord, rnd));
+          pushFill(cmMakeFill(pickType(), it.abs + it.dur - fl, fl, it.chord, nxChord, rnd, it.midi));
         } else if (it.rest && it.dur >= 1 - 1e-6) {
-          pushFill(cmMakeFill(pickType(), it.abs, it.dur, it.chord, nxChord, rnd));
+          pushFill(cmMakeFill(pickType(), it.abs, it.dur, it.chord, nxChord, rnd, prevMel()));
         } else filled.push(it);
       });
       items = filled;
@@ -2685,6 +2906,7 @@ const AUTUMN_LEAVES_MELODY = [
       const cmMode = CM_MODES.find(m => m.id === category) || null;
       const isCmMode = !!cmMode && !!currentSong.melodyBars && !currentSong.isTranscription;
       const [cmSeed, setCmSeed] = useState(1);            // 「再生成」でフィルを変える
+      const [msFocus, setMsFocus] = useState("both");      // Minor Scales：MM・HMのどちらを中心にするか
       const playSong = React.useMemo(() => {
         if (!isCmMode) return currentSong;
         const cm = arrangeBassChordMelody(currentSong.melodyBars, chords, cmMode.cm, cmSeed);
@@ -2913,6 +3135,21 @@ const AUTUMN_LEAVES_MELODY = [
               if (category === "BH" && !spanNow) {
                 const bhPool = makeBarryHarrisCells(chord1, chord2, !!c2Str, true);
                 if (bhPool.length) pool = bhPool;
+              }
+              // Minor Scales：メロディックマイナー／ハーモニックマイナーのモードで、その場でラインを作る
+              if (category === "MS" && !spanNow) {
+                // 次の「違う」コード（同じコードが続くときは先を見る。最後の小節は頭に戻る）
+                let nx = null;
+                const lastName = (c2Str || c1Str);
+                for (let k = 1; k <= chords.length && !nx; k++) {
+                  const nxR = chords[(globalMeasureIdx + k) % chords.length];
+                  const first = nxR ? nxR.split(/\s+/).filter(Boolean)[0] : null;
+                  if (first && first !== lastName) nx = parseChord(first);
+                }
+                const focus = (typeof msFocus === "undefined") ? "both" : msFocus;
+                let msPool = makeMinorScaleCells(chord1, chord2, !!c2Str, true, nx, focus);
+                if (!msPool.length && focus !== "both") msPool = makeMinorScaleCells(chord1, chord2, !!c2Str, true, nx, "both");
+                if (msPool.length) pool = msPool;
               }
               if (pool.length === 0) {
                 pool = PHRASE_DICTIONARY.filter(c => (!allow16th ? !hasSixteenth(c) : true) && !c.onlyV7 && !c.onlyMajor && !c.onlyMinor && !c.q && !c.span2);
@@ -3355,7 +3592,7 @@ const AUTUMN_LEAVES_MELODY = [
 
       useEffect(() => {
         generateEtude();
-      }, [category, allow16th, currentSong, chords, playSong]);
+      }, [category, allow16th, currentSong, chords, playSong, msFocus]);
 
       // スコア描画
       useEffect(() => {
@@ -3732,6 +3969,7 @@ const AUTUMN_LEAVES_MELODY = [
                   { id: "TRIAD", label: "Triad" },
                   { id: "BEBOP", label: "Jazz Phrase" },
                   { id: "PENTA", label: "Mechanical" },
+                  { id: "MS", label: "Minor Scales", desc: "maj7はトライアドかメジャー・スケール。7thは解決先でオルタード（半音上のMM）・フリジアン・ドミナント（解決先のHM）・ミクソ♭6、解決しない7thはリディアン♭7。m7b5はロクリアン♮2／♮6、dim7はHMの第7モード、マイナーはMM／HM" },
                   { id: "BH", label: "Barry Harris", desc: "6thディミニッシュ・スケール（メジャー6th／マイナー6th／7th）。m7は短3度上の6th、m7b5は短3度上のマイナー6th、dim7は半音上のマイナー6thで考える" },
                   ...CM_MODES
                 ].map(tab => { const off = !!tab.cm && (!currentSong.melodyBars || currentSong.isTranscription); return (
@@ -3750,6 +3988,17 @@ const AUTUMN_LEAVES_MELODY = [
                   </button>
                 ); })}
               </div>
+
+              {category === "MS" && (
+                <div className="flex items-center gap-1 text-xs font-bold text-slate-700 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-sm"
+                  title="ii のマイナー（m6の響き）と、7th→メジャーのオルタード、dim7のHMはどの設定でも使います">
+                  <span className="px-1">スケール</span>
+                  {[["both", "両方"], ["MM", "メロディック中心"], ["HM", "ハーモニック中心"]].map(([k, lbl]) => (
+                    <button key={k} onClick={() => setMsFocus(k)}
+                      className={`px-2 py-1 rounded-lg ${msFocus === k ? "bg-amber-500 text-white" : "text-slate-500 hover:bg-slate-100"}`}>{lbl}</button>
+                  ))}
+                </div>
+              )}
 
               <button
                 onClick={() => (isCmMode ? setCmSeed(x => x + 1) : generateEtude())}
