@@ -2026,6 +2026,86 @@ const AUTUMN_LEAVES_MELODY = [
       return cells;
     };
 
+    // ── Triad Pair モード（ギター版トレーナーのLv4から移植）：トライアド・ペア（共通音のない2つのメジャー・トライアドで6音を作る）──
+    // 値＝コードのルートから見たトライアドのルート（半音）。どちらもメジャー・トライアド
+    const triadPairsFor = (chord) => {
+      const t = String(chord.name || "").replace(/^[A-G][#b]?/, "").split("/")[0];
+      if (chord.isDim && !t.includes("m7b5")) return [{ r: [8, 2], name: "dim" }];                  // C#dim7 → A + Eb
+      if (t.includes("m7b5") || t.includes("ø")) return [{ r: [6, 8], name: "locrian" }];          // Bm7b5 → F + G
+      if (chord.isMinor) return [{ r: [3, 5], name: "dorian" }];                                    // Dm7 → F + G
+      if (chord.isV7) return [{ r: [10, 0], name: "mixolydian" }, { r: [6, 8], name: "altered" }];  // G7 → F + G ／ Db + Eb
+      return [{ r: [0, 2], name: "lydian" }];                                                       // Cmaj7 → C + D
+    };
+    const triadPcs = (root) => [0, 4, 7].map(x => (root + x) % 12);
+    // 指定トライアドの音で v より上（dir=1）／下（dir=-1）の一番近い音
+    const nextInTriad = (pcs, v, dir) => { for (let k = 1; k <= 12; k++) { const c = v + dir * k; if (pcs.includes(((c % 12) + 12) % 12)) return c; } return v; };
+    const tpLine = (A, B, start, group, n, dir, zigzag) => {
+      // group 音ずつ A→B→A… と切り替える。zigzag なら1グループごとに向きを反転
+      const out = [start]; let cur = start, tri = 0, inGroup = 1, d = dir;
+      while (out.length < n) {
+        if (inGroup >= group) { tri = 1 - tri; inGroup = 0; if (zigzag) d = -d; }
+        cur = nextInTriad(tri === 0 ? A : B, cur, d);
+        out.push(cur); inGroup++;
+      }
+      return out;
+    };
+    const makeTriadPairCells = (chord1, chord2, twoChords, useRests = true) => {
+      const cells = [];
+      const pairs = triadPairsFor(chord1);
+      pairs.forEach(pr => {
+        const A = triadPcs(pr.r[0]), B = triadPcs(pr.r[1]);
+        const hint = `${PC_NAMES[(chord1.rootPc + pr.r[0]) % 12]}+${PC_NAMES[(chord1.rootPc + pr.r[1]) % 12]}`;
+        const starts = [];
+        for (let v = 0; v < 24; v++) if (A.includes(v % 12)) starts.push(v);
+        if (twoChords) {
+          // 前半だけトライアド・ペア、後半は次のコードのペアへ近い音で続ける
+          const pr2 = triadPairsFor(chord2)[0];
+          const A2 = triadPcs(pr2.r[0]), B2 = triadPcs(pr2.r[1]);
+          const diff = ((chord1.rootPc - chord2.rootPc) + 12) % 12;
+          const hint2 = `${hint} | ${PC_NAMES[(chord2.rootPc + pr2.r[0]) % 12]}+${PC_NAMES[(chord2.rootPc + pr2.r[1]) % 12]}`;
+          starts.forEach(st => [1, -1].forEach(dir => {
+            const h1 = tpLine(A, B, st, 2, 4, dir, false);
+            const s2 = nextInTriad(A2, h1[3] + diff, dir);
+            const h2 = tpLine(A2, B2, s2, 2, 4, dir, false);
+            const o = [...h1, ...h2];
+            cells.push({ cat: `TriadPair ${pr.name} 2+2`, p: ["8","8","8","8","8","8","8","8"], d: o.map(v => "s" + v), authentic: true, tp: true, hint: hint2 });
+            if (useRests) ["nnnhnnnh", "nnnrnnnn", "nhnnnnnr"].forEach(mask => {
+              const r = applyMask(o, mask);
+              cells.push({ cat: `TriadPair ${pr.name} 2+2 ${mask}`, p: r.p, d: r.d, authentic: true, tp: true, hint: hint2 });
+            });
+          }));
+          return;
+        }
+        starts.forEach(st => [1, -1].forEach(dir => {
+          const shapes = [
+            { k: "3+3", o: tpLine(A, B, st, 3, 8, dir, false), p: Array(8).fill("8") },
+            { k: "2+2", o: tpLine(A, B, st, 2, 8, dir, false), p: Array(8).fill("8") },
+            { k: "3+3 zigzag", o: tpLine(A, B, st, 3, 8, dir, true), p: Array(8).fill("8") },
+            // 3連符：1拍ごとにトライアドを切り替える（ラーゲ・ルンドがよく使う形）
+            { k: "triplets", o: tpLine(A, B, st, 3, 12, dir, false), p: Array(12).fill("trip8") },
+            { k: "triplets arch", o: null, p: Array(12).fill("trip8"), arch: true }
+          ];
+          shapes.forEach(sh => {
+            let o = sh.o;
+            if (sh.arch) {  // 上がった頂点から、同じトライアドの切り替えで下りる
+              const up = tpLine(A, B, st, 3, 6, dir, false);
+              const down = tpLine(B, A, nextInTriad(B, up[5], -dir), 3, 6, -dir, false);
+              o = [...up, ...down];
+            }
+            if (Math.max(...o) - Math.min(...o) > 26) return;
+            cells.push({ cat: `TriadPair ${pr.name} ${sh.k}`, p: sh.p, d: o.map(v => "s" + v), authentic: true, tp: true, hint });
+            if (useRests && sh.p.length === 8) {
+              [...REST_MASKS].sort(() => Math.random() - 0.5).slice(0, 2).forEach(mask => {
+                const r = applyMask(o, mask);
+                cells.push({ cat: `TriadPair ${pr.name} ${sh.k} ${mask}`, p: r.p, d: r.d, authentic: true, tp: true, hint });
+              });
+            }
+          });
+        }));
+      });
+      return cells;
+    };
+
     const hasSixteenth = (cell) => [...cell.p, ...(cell.p2 || [])].some(x => x === "16" || x === "trip16");
 
     // 音価の解決（完コピ譜面・アドリブ生成の両方で共通利用）
@@ -3231,6 +3311,11 @@ const AUTUMN_LEAVES_MELODY = [
                 const bhPool = makeBarryHarrisCells(chord1, chord2, !!c2Str, true);
                 if (bhPool.length) pool = bhPool;
               }
+              // Triad Pair：共通音のない2つのメジャー・トライアドを切り替えるラインを、その場で作る
+              if (category === "TP" && !spanNow) {
+                const tpPool = makeTriadPairCells(chord1, chord2, !!c2Str, true);
+                if (tpPool.length) pool = tpPool;
+              }
               // Minor Scales：メロディックマイナー／ハーモニックマイナーのモードで、その場でラインを作る
               if (category === "MS" && !spanNow) {
                 // 次の「違う」コード（同じコードが続くときは先を見る。最後の小節は頭に戻る）
@@ -3351,7 +3436,7 @@ const AUTUMN_LEAVES_MELODY = [
                 pendingSpan = { cell: { cat: cell.cat + " (2/2)", p: cell.p2, d: cell.d2, authentic: true, spanTail: true }, root: actualRoot1 };
               }
               // トライアドのフレーズ：音の並びはそのままに、ジャズの実フレーズのリズム（休符・3連・16分・付点）を当てる
-              if (!spanNow && !cell.span2 && !cell.isHarm && (cell.cat.includes("Triad") || cell.cat.includes("Drop")) && Math.random() < TRIAD_RHYTHM_PROB) {
+              if (!spanNow && !cell.span2 && !cell.isHarm && !cell.tp && !cell.ms && (cell.cat.includes("Triad") || cell.cat.includes("Drop")) && Math.random() < TRIAD_RHYTHM_PROB) {
                 const rl = (JAZZ_RHYTHMS[cell.d.length] || []).filter(r => allow16th || !hasSixteenth({ p: r.p }));
                 if (rl.length) {
                   const pickR = rl[Math.floor(Math.random() * rl.length)];
@@ -4077,6 +4162,7 @@ const AUTUMN_LEAVES_MELODY = [
                   { id: "TRIAD", label: "Triad" },
                   { id: "BEBOP", label: "Jazz Phrase" },
                   { id: "PENTA", label: "Mechanical" },
+                  { id: "TP", label: "Triad Pair", desc: "共通音のない2つのトライアドを切り替える（maj7=I+II、m7=bIII+IV、7th=bVII+I または bV+bVI、m7b5=bV+bVI、dim7=bVI+II）。8分の3音ずつ・2音ずつ・ジグザグ、3連で1拍ごとに切り替える形など" },
                   { id: "MS", label: "Minor Scales", desc: "maj7はトライアドかメジャー・スケール。7thは解決先でオルタード（半音上のMM）・フリジアン・ドミナント（解決先のHM）・ミクソ♭6、解決しない7thはリディアン♭7。m7b5はロクリアン♮2／♮6、dim7はHMの第7モード、マイナーはMM／HM" },
                   { id: "BH", label: "Barry Harris", desc: "6thディミニッシュ・スケール（メジャー6th／マイナー6th／7th）。m7は短3度上の6th、m7b5は短3度上のマイナー6th、dim7は半音上のマイナー6thで考える" },
                   ...CM_MODES
